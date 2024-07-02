@@ -16,7 +16,6 @@ import FileModelView from './FileModel';
 import FileJassView from './FileJass';
 
 import Formats from 'mdx/parsers/w3x';
-import { ObjectInspector, ObjectRootLabel, ObjectLabel, ObjectName, ObjectValue } from 'react-inspector';
 import ObjectPreviewEx from './ObjectPreviewEx';
 
 const gameFileTypes = {
@@ -45,7 +44,7 @@ const nodeRenderer = ({ depth, name, data, isNonenumerable, expanded }) => {
     if (typeof name === 'string') {
       return (
         <span>
-          <ObjectName name={name} />
+        <span>{name}</span>
           <span>: </span>
           <ObjectPreviewEx data={data} />
         </span>
@@ -54,7 +53,8 @@ const nodeRenderer = ({ depth, name, data, isNonenumerable, expanded }) => {
       return <ObjectPreviewEx data={data} />;
     }
   } else {
-    return <ObjectLabel name={name} data={data} isNonenumerable={isNonenumerable} />;
+    // return <ObjectLabel name={name} data={data} isNonenumerable={isNonenumerable} />;
+    return <span>{name}</span>
   }
 };
 
@@ -135,7 +135,8 @@ export class FileData extends React.Component {
     case "audio": return <FileAudioView audio={this.audio}/>;
     case "model": return <FileModelView id={this.props.id}/>;
     case "image": return <FileImageView data={this.binary} image={this.image}/>;
-    case "data": return <ObjectInspector expandLevel={1} data={this.data}/>;
+    // case "data": return <ObjectInspector expandLevel={1} data={this.data}/>;
+    case "data": throw Error('missing component')
     default: return null;
     }
   }

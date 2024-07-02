@@ -30,7 +30,7 @@ public:
 
   Value(Type type = tUndefined);
   ~Value() {
-    clear();
+    // clear();
   }
 
   Value(bool val);
