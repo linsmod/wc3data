@@ -1,8 +1,12 @@
 #include "icons.h"
 #include "rmpq/common.h"
 #include "hash.h"
-
+#include <iostream> // 包含输入输出流库  
+static int i=0;
+static int off=0;
 void ImageStorage::add(uint64 hash, Image image) {
+  i++;
+  // std::cout << fmtstring("ImageStorage::add %u. image.resize w=%u h=%u", i-off,image.width(), image.height()) << std::endl;  
   hashes_.push_back(hash);
   image = image.resize(width_, height_);
   if (!current_) {
@@ -25,5 +29,7 @@ void ImageStorage::flush() {
   if (current_) {
     current_.write(fmtstring("icons%u.png", id_++));
     current_ = Image();
+     std::cout << fmtstring("flush icons%u.png", id_) << std::endl;  
+     off=i;
   }
 }

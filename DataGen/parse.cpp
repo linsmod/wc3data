@@ -282,9 +282,9 @@ MemoryFile MapParser::processObjects() {
   if (onProgress) onProgress(PROGRESS_LOAD_OBJECTS);
 
 #ifndef NO_SYSTEM
-  //for (int type = 0; type < GameData::NUM_TYPES; ++type) {
-  //  Logger::log("Data %-10s count=%-8u size=%-8u", typeNames[type].c_str(), data.data[type]->numUnits(), data.data[type]->dataSize());
-  //}
+  for (int type = 0; type < GameData::NUM_TYPES; ++type) {
+   Logger::log("Data %-10s count=%-8u size=%-8u", typeNames[type].c_str(), data.data[type]->numUnits(), data.data[type]->dataSize());
+  }
 #endif
 
   MemoryFile outFile;

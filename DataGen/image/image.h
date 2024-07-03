@@ -2,9 +2,11 @@
 
 #include "utils/common.h"
 #include "utils/file.h"
+#include "utils/logger.h"
 #include <algorithm>
 #include <cmath>
-
+#include <cassert>
+#include <memory>
 namespace Color {
 
   template<
@@ -29,7 +31,11 @@ namespace Color {
         return ((value_ >> shift) & max) * 255 / max;
       }
       ColorComponent& operator=(int value) {
-        value_ = (value_ & ~mask) | ((static_cast<value_t>(value) * max / 255) << shift);
+        assert(value >= 0 && value <= 255 && "Value must be between 0 and 255");
+
+        auto newValue = (static_cast<value_t>(value) * max / 255) << shift;
+        assert(newValue <= std::numeric_limits<value_t>::max() && "Calculated value may overflow");
+        value_ = (value_ & ~mask) | newValue; // ln 33
         return *this;
       }
       ColorComponent& clamp(int value) {
@@ -401,7 +407,7 @@ public:
   }
 
   ImageBase(int width, int height, color_t color = 0)
-    : data_(std::make_shared<Data>(width, height))
+    : data_(std::make_unique<Data>(width, height))
   {
     for (int i = 0; i < width * height; ++i) {
       data_->bits_[i] = color;
@@ -642,12 +648,14 @@ bool ImageBase<color_t>::read(std::string const& path, ImageFormat::Type format)
   return data_ != nullptr;
 }
 #endif
+#include "utils/logger.h"
 template<class color_t>
 template<typename Filter>
 ImageBase<color_t> ImageBase<color_t>::resize(int width, int height, Filter filter) const {
   ImageBase<color_t> cur(*this);
   if (cur.width() != width) {
     ImagePrivate::LinScaler<color_t, Filter> scaler(cur.width(), width, static_cast<double>(width) / static_cast<double>(cur.width()));
+    // Logger::log("resize width=%u,height=%u",width, cur.height());
     ImageBase<color_t> next(width, cur.height());
     for (int y = 0; y < cur.height(); ++y) {
       scaler.scale(cur.bits() + y * cur.width(), 1, next.mutable_bits() + y * next.width(), 1);

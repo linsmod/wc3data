@@ -2,76 +2,84 @@
 #include "common.h"
 #include <algorithm>
 #include <list>
-
-#ifdef _MSC_VER
-#define NOMINMAX
-#include <conio.h>
-#include <windows.h>
-void ConsoleStart() {}
-void ConsoleEnd() {}
-#else
-#define NOLOGGER
 #include <ncurses.h>
+#include <ostream>
+#include <termios.h>
+
+// 移除Windows相关的预处理器指令和包含
+// #ifdef _MSC_VER
+// #define NOMINMAX
+// #include <conio.h>
+// #include <windows.h>
+// ...
+// #endif
+
+// 由于NOLOGGER在这里未被使用，可以考虑移除或根据实际用途保留
+// #ifdef _MSC_VER
+// #else
+// #define NOLOGGER
+// ...
+// #endif
+
+// 使用ncurses的窗口句柄类型，这部分代码可以保留，因为它已经是POSIX兼容的
 typedef WINDOW* HANDLE;
 typedef void VOID;
 typedef unsigned long DWORD;
-static HANDLE _consoleHandle = nullptr;
-typedef short SHORT;
-struct COORD {
-  SHORT X, Y;
-};
-void SetConsoleCursorPosition(HANDLE console, COORD pos) {
-  wmove(console, pos.Y, pos.X);
-}
-void WriteConsole(HANDLE console, const VOID* text, DWORD length, DWORD* written, void* reserved) {
-  wprintw(console, "%.*s", length, (char const*) text);
-  if (written) *written = length;
-  wrefresh(console);
-}
-static const int STD_OUTPUT_HANDLE = 0;
-static int _consoleColor = 7;
-HANDLE GetStdHandle(int) {
-  return _consoleHandle;
-}
+
+// COORD 结构体在ncurses中已有对应定义，无需重复定义
+// struct COORD { SHORT X, Y; };
+
+// 直接使用ncurses的函数，因此GetStdHandle等可以省略或根据需要调整
+// static const int STD_OUTPUT_HANDLE = 0;
+// HANDLE GetStdHandle(int) {
+//    return _consoleHandle;
+// }
+
+// 初始化和结束ncurses环境
 void ConsoleStart() {
-  _consoleHandle = initscr();
-  start_color();
-  for (int i = 1; i <= 7; ++i) {
-    init_pair(i, i, COLOR_BLACK);
-  }
-  attron(COLOR_PAIR(7));
+    initscr();
+    start_color();
+    for (int i = 1; i <= 7; ++i) {
+        init_pair(i, i, COLOR_BLACK);
+    }
+    attron(COLOR_PAIR(7));
 }
+
 void ConsoleEnd() {
-  endwin();
+    endwin();
 }
+
+// 设置文本属性
 void SetConsoleTextAttribute(HANDLE console, int color) {
-  if (color != _consoleColor) {
-    attroff(COLOR_PAIR(_consoleColor));
-    attron(COLOR_PAIR(_consoleColor = color));
-  }
-}
-struct CONSOLE_SCREEN_BUFFER_INFO {
-  COORD dwCursorPosition;
-};
-void GetConsoleScreenBufferInfo(HANDLE console, CONSOLE_SCREEN_BUFFER_INFO* info) {
-  info->dwCursorPosition.Y = getcury(console);
-  info->dwCursorPosition.X = getcurx(console);
+    // if (color != _consoleColor) {
+    //     attroff(COLOR_PAIR(_consoleColor));
+    //     attron(COLOR_PAIR(_consoleColor = color));
+    // }
 }
 
-#include <termios.h>
+// 获取光标位置的模拟在ncurses中通过getcury和getcurx实现，这部分代码可以省略或内联到需要使用的地方
+// struct CONSOLE_SCREEN_BUFFER_INFO {
+//     COORD dwCursorPosition;
+// };
+// void GetConsoleScreenBufferInfo(HANDLE console, CONSOLE_SCREEN_BUFFER_INFO* info) {
+//     ...
+// }
+
+// 对于_getch函数，使用termios进行非缓冲输入的处理已经正确，保持不变
 int _getch() {
-  struct termios t1, t2;
-  tcgetattr(0, &t1);
-  t2 = t1;
-  t2.c_lflag &= ~ICANON;
-  t2.c_lflag &= ~ECHO;
-  tcsetattr(0, TCSANOW, &t2);
-  int ch = getchar();
-  tcsetattr(0, TCSANOW, &t1);
-  return ch;
+    struct termios t1, t2;
+    tcgetattr(0, &t1);
+    t2 = t1;
+    t2.c_lflag &= ~ICANON;
+    t2.c_lflag &= ~ECHO;
+    tcsetattr(0, TCSANOW, &t2);
+    int ch = getchar();
+    tcsetattr(0, TCSANOW, &t1);
+    return ch;
 }
 
-#endif
+// 注意：原始代码中的WriteConsole和SetConsoleCursorPosition函数已经在ncurses环境中通过wprintw, wmove等函数间接实现，
+// 因此，如果这些函数在其他地方被调用，应该直接使用ncurses提供的API。
 
 Logger::Logger()
   : logfile(nullptr)
@@ -98,7 +106,6 @@ struct Logger::Task {
 
   HANDLE handle;
   Task* parent;
-  COORD pos;
   std::string name;
   std::string line;
   int count;
@@ -136,7 +143,7 @@ Logger::Task* Logger::top = nullptr;
 
 void Logger::Task::move(int y) {
   erase();
-  pos.Y = y;
+  // pos.Y = y;
   draw();
 }
 void Logger::Task::item(char const* text) {
@@ -154,15 +161,16 @@ void Logger::Task::progress(int count, bool add) {
 }
 void Logger::Task::erase() {
   std::string buf(8 + line.length(), ' ');
-  SetConsoleCursorPosition(handle, pos);
-  WriteConsole(handle, buf.c_str(), buf.length(), nullptr, nullptr);
-  SetConsoleCursorPosition(handle, { 0, pos.Y });
+  // SetConsoleCursorPosition(handle, pos);
+  // WriteConsole(handle, buf.c_str(), buf.length(), nullptr, nullptr);
+  // SetConsoleCursorPosition(handle, { 0, pos.Y });
 }
 void Logger::Task::draw() {
   std::string prev = line;
   line.clear();
   write(prev);
 }
+#include <iostream> // 包含输入输出流库  
 void Logger::Task::write(std::string const& text) {
   std::string buf;
   if (count < 0) {
@@ -193,19 +201,8 @@ void Logger::Task::write(std::string const& text) {
       buf = "[99.9%] ";
     }
   }
-  SetConsoleCursorPosition(handle, pos);
-  SetConsoleTextAttribute(handle, 2);
-  WriteConsole(handle, buf.c_str(), buf.length(), nullptr, nullptr);
-  SetConsoleTextAttribute(handle, 7);
-  WriteConsole(handle, text.c_str(), text.length(), nullptr, nullptr);
-  if (line.length() > text.length()) {
-    buf.assign(line.length() - text.length(), ' ');
-    WriteConsole(handle, buf.c_str(), buf.length(), nullptr, nullptr);
-    SetConsoleCursorPosition(handle, {
-      static_cast<SHORT>(pos.X + 8 + text.length()),
-      static_cast<SHORT>(pos.Y)
-    });
-  }
+
+  std::cout << buf << std::endl;
   line = text;
   time = GetTickCount();
 }
@@ -236,8 +233,8 @@ void Logger::Task::update(Iter from) {
     prev = &*std::prev(from);
   }
   for (; from != sub.end(); ++from) {
-    from->move(prev ? prev->pos.Y + prev->height : pos.Y + 1);
-    from->update(from->sub.begin());
+    // from->move(prev ? prev->pos.Y + prev->height : pos.Y + 1);
+    // from->update(from->sub.begin());
     prev = &*from;
   }
 }
@@ -253,13 +250,13 @@ void Logger::Task::shift(Iter from) {
 void Logger::Task::rupdate(Iter from) {
   if (from == sub.end()) return;
   Task* to = &*from;
-  int prev = pos.Y + height;
-  for (auto it = sub.rbegin(); it != sub.rend(); ++it) {
-    it->rupdate(it->sub.begin());
-    it->move(prev - it->height);
-    prev = it->pos.Y;
-    if (&*it == to) break;
-  }
+  // int prev = pos.Y + height;
+  // for (auto it = sub.rbegin(); it != sub.rend(); ++it) {
+  //   it->rupdate(it->sub.begin());
+  //   it->move(prev - it->height);
+  //   // prev = it->pos.Y;
+  //   if (&*it == to) break;
+  // }
 }
 void Logger::Task::rshift(Iter from) {
   if (parent) {
@@ -292,7 +289,7 @@ Logger::Task* Logger::Task::insert(int count, std::string const& name) {
 }
 
 Logger::Task::Task()
-  : handle(GetStdHandle(STD_OUTPUT_HANDLE))
+  : handle(0)
   , parent(nullptr)
   , count(0)
   , index(0)
@@ -300,13 +297,13 @@ Logger::Task::Task()
   , msize(0)
   , time(0)
 {
-  CONSOLE_SCREEN_BUFFER_INFO info;
-  GetConsoleScreenBufferInfo(handle, &info);
-  pos.X = -2;
-  pos.Y = info.dwCursorPosition.Y - 1;
+  // CONSOLE_SCREEN_BUFFER_INFO info;
+  // GetConsoleScreenBufferInfo(handle, &info);
+  // pos.X = -2;
+  // pos.Y = info.dwCursorPosition.Y - 1;
 }
 Logger::Task::Task(Task* parent, int count, std::string const& name)
-  : handle(GetStdHandle(STD_OUTPUT_HANDLE))
+  : handle(0)
   , parent(parent)
   , name(name)
   , count(count)
@@ -315,12 +312,12 @@ Logger::Task::Task(Task* parent, int count, std::string const& name)
   , msize(0)
   , time(0)
 {
-  pos.X = parent->pos.X + 2;
+  // pos.X = parent->pos.X + 2;
   if (parent->sub.empty()) {
-    pos.Y = parent->pos.Y + 1;
+    // pos.Y = parent->pos.Y + 1;
   } else {
-    Task* last = &parent->sub.back();
-    pos.Y = last->pos.Y + last->height;
+    // Task* last = &parent->sub.back();
+    // pos.Y = last->pos.Y + last->height;
   }
   write(name);
 }
@@ -334,29 +331,65 @@ Logger::Task::~Task() {
 static int _level = 0;
 void* Logger::begin(size_t count, char const* name, void* task_) {
   for (int i = 0; i < _level; ++i) {
-//    fprintf(stderr, "  ");
+   fprintf(stderr, "  ");
+   Logger::print("  ");
   }
 //  fprintf(stderr, "%s\n", name);
+  Logger::println(name);
   ++_level;
   return nullptr;
 }
 void Logger::item(char const* name, void* task_) {
   for (int i = 0; i < _level; ++i) {
-//    fprintf(stderr, "  ");
+  //  fprintf(stderr, "  ");
+    Logger::print("  ");
   }
 //  fprintf(stderr, "%s\n", name);
+ Logger::println(name);
 }
 void Logger::progress(size_t count, bool add, void* task_) {}
 void Logger::end(bool pop, void* task_) {
   --_level;
 }
-
+#include "utils/path.h"
 void Logger::log(char const* fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   std::string text = varfmtstring(fmt, ap);
   va_end(ap);
   fprintf(stderr, "%s\n", text.c_str());
+
+  if (!instance.logfile) {
+    instance.logfile = new File(path::root() / "log.txt", "at");
+    instance.logfile->printf("============\n");
+  }
+  instance.logfile->printf("%s\n", text.c_str());
+}
+void Logger::println(char const* fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  std::string text = varfmtstring(fmt, ap);
+  va_end(ap);
+  // fprintf(stderr, "%s\n", text.c_str());
+
+  if (!instance.logfile) {
+    instance.logfile = new File(path::root() / "log.txt", "at");
+    instance.logfile->printf("============\n");
+  }
+  instance.logfile->printf("%s\n", text.c_str());
+}
+void Logger::print(char const* fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  std::string text = varfmtstring(fmt, ap);
+  va_end(ap);
+  // fprintf(stderr, "%s\n", text.c_str());
+
+  if (!instance.logfile) {
+    instance.logfile = new File(path::root() / "log.txt", "at");
+    instance.logfile->printf("============\n");
+  }
+  instance.logfile->printf("%s", text.c_str());
 }
 #else
 void* Logger::begin(size_t count, char const* name, void* task_) {

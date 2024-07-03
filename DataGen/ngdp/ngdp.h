@@ -4,6 +4,12 @@
 #include "utils/file.h"
 #include <unordered_map>
 
+#include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <string>
+#include <vector>
+
 namespace NGDP {
 
   extern const std::string HOST;
@@ -128,6 +134,35 @@ namespace NGDP {
     File getArchive(std::string const& hash);
 
   private:
+    void createDirectory(const std::string &subdir) {
+      std::string path = root_ + "/" + subdir;
+      mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+      if (mkdir(path.c_str(), mode) != 0 && errno != EEXIST) {
+        perror("mkdir failed");
+      }
+    }
+
+    void listFilesInDirectory(const std::string &subdir,
+                              std::vector<std::string> &names) {
+      DIR *dir;
+      struct dirent *ent;
+      if ((dir = opendir((root_ + "/" + subdir).c_str())) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+          if (ent->d_type != DT_DIR) {
+            names.push_back(ent->d_name);
+          }
+        }
+        closedir(dir);
+      } else {
+        perror("opendir failed");
+      }
+    }
+
+    void removeFile(const std::string &filename) {
+      if (unlink((root_ + "/" + filename).c_str()) != 0) {
+        perror("unlink failed");
+      }
+    }
     std::string root_;
   };
 

@@ -2,6 +2,8 @@
 #include "utils/checksum.h"
 #include <vector>
 
+#include <limits>
+
 namespace mpq {
 
 namespace {

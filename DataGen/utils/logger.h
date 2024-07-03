@@ -25,6 +25,8 @@ public:
   static int menu(char const* title, std::map<char, std::string> const& options);
 
   static void log(char const* fmt, ...);
+  static void print(char const* fmt, ...);
+  static void println(char const* fmt, ...);
 
   template<class List>
   class Loop {
