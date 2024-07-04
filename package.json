@@ -98,7 +98,8 @@
   "devDependencies": {
     "@babel/core": "^7.24.7",
     "@babel/plugin-proposal-decorators": "^7.4.4",
-    "exports-loader": "^0.7.0",
+    "@babel/plugin-proposal-optional-chaining": "^7.21.0",
+    "exports-loader": "^1.0.0",
     "worker-loader": "^2.0.0"
   },
   "jest": {
@@ -149,6 +150,9 @@
   "babel": {
     "presets": [
       "react-app"
+    ],
+    "plugins": [
+      "@babel/plugin-proposal-optional-chaining"
     ]
   }
 }

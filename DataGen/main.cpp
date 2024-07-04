@@ -81,60 +81,59 @@ MemoryFile write_images(std::set<istring> const &names, CompositeLoader &loader,
         (ext == ".mdx" || ext == ".slk" || ext == ".txt" || ext == ".j")) {
       File f = loader.load(fn.c_str());
       if (f) {
-        if(fn.find("DragonSpawnBlue_Portrait")!=-1){
-            Logger::log(" lets debug: %s", fn.c_str());
-          }  
-        Logger::log("mdxarc.add: %s", fn.c_str());
+        if (fn.find("DragonSpawnBlue_Portrait") != -1) {
+          Logger::info(" lets debug: %s", fn.c_str());
+        }
+        Logger::info("mdxarc.add: %s", fn.c_str());
         mdxarc.add(hash, f, true);
         listFile.printf("%s\n", fn.c_str());
       }
       continue;
     }
     if (!isImage) {
-      Logger::log(" skip as !image: %s", fn.c_str());
+      Logger::info(" skip as !image: %s", fn.c_str());
       continue;
     }
     if (!all && fn.find("replaceabletextures\\") != 0) {
-      Logger::log(" skip as !replaceabletextures: %s", fn.c_str());
+      Logger::info(" skip as !replaceabletextures: %s", fn.c_str());
       continue;
     }
-    if (fn.find(".dds") == -1) {
+    // if (fn.find(".dds") == -1) {
       File f = loader.load(fn.c_str());
       Image img(f);
       if (img) {
         if (fn.find("replaceabletextures\\") == 0) {
-          Logger::log("images.add: %s w=%u, h=%u", fn.c_str(), img.height(),
+          Logger::info("images.add: %s w=%u, h=%u", fn.c_str(), img.height(),
                       img.width());
           images.add(pathHash(fn.c_str()), img);
         }
         if (all) {
-          Logger::log("img.write: %s w=%u, h=%u", fn.c_str(), img.height(),
+          Logger::info("img.write: %s w=%u, h=%u", fn.c_str(), img.height(),
                       img.width());
-          if(fn.find("WelcomeToBattleNet_Large")!=-1){
-            Logger::log(" lets debug: %s w=%u, h=%u", fn.c_str(), img.height(),
-                      img.width());
-          }                      
+          if (fn.find("WelcomeToBattleNet_Large") != -1) {
+            Logger::info(" lets debug: %s w=%u, h=%u", fn.c_str(), img.height(),
+                        img.width());
+          }
           File &imgf = imarc[hash % NUM_IMAGE_ARCHIVES].create(hash);
           img.write(imgf);
           listFile.printf("%s\n", fn.c_str());
         }
+      } else {
+        Logger::info("    not a image?: %s", fn.c_str());
       }
-      else{
-         Logger::log("    not a image?: %s", fn.c_str());
-      }
-    }
+    // }
   }
   if (all) {
     for (size_t i = 0; i < NUM_IMAGE_ARCHIVES; ++i) {
-      Logger::log("Writting img archive: images%d.gzx", (int)i);
+      Logger::info("Writting img archive: images%d.gzx", (int)i);
       imarc[i].write(
           File(path::root() / fmtstring("images%d.gzx", (int)i), "wb"));
     }
-    Logger::log("Writting mdx archive: files.gzx");
+    Logger::info("Writting mdx archive: files.gzx");
     mdxarc.write(File(path::root() / "files.gzx", "wb"));
   }
   MemoryFile hashes;
-  Logger::log("Writting hashs");
+  Logger::info("Writting hashs");
   images.writeHashes(hashes);
   hashes.seek(0);
   return hashes;
@@ -315,12 +314,16 @@ struct CdnBuildData : public BuildData {
 struct MpqBuildData : public BuildData {
   MpqBuildData(std::string const &root) {
     for (auto ar :
-         {"war3patch.mpq", "war3xLocal.mpq", "war3x.mpq", "war3.mpq"}) {
-      auto arc = std::make_shared<mpq::Archive>(File(root / ar));
-      loader.add(arc);
+         {"war3patch.mpq", "War3Patch.mpq", "war3xLocal.mpq", "War3xLocal.mpq",
+          "war3x.mpq", "War3x.mpq", "war3.mpq", "War3.mpq"}) {
+      File file(root / ar);
+      if (file) {
+        auto arc = std::make_shared<mpq::Archive>(file);
+        loader.add(arc);
+      }
     }
 
-    File listf(path::root() / "../listfile.txt", "rb");
+    File listf(path::root() / "../../listfile.txt", "rb");
     std::string line;
     while (listf.getline(line)) {
       names.insert(trim(line));
@@ -340,11 +343,13 @@ int main() {
     // build = "8741363b75f97365ff584fda9d4b804f"; // 1.30.2.11065
     // build = "7c45731c22f6bf4ff30035ab9d905745"; // 1.30.4.11274
     // 1.31.0.12071
-    CdnBuildData data(build);
+    // CdnBuildData data(build);
 
-    // std::string root = R"(G:\Games\Warcraft III)";
-
-    data.write_data(true, true);
+    std::string root = R"(/work/war3files/)";
+    MpqBuildData mpqdat(root);
+    mpqdat.write_data(true, true);
+    mpqdat.write_maps();
+    // data.write_data(true, true);
 
     // data.write_maps();
     //
@@ -356,7 +361,7 @@ int main() {
     //  uint32 t0 = GetTickCount();
     //  parser.onProgress = [&](unsigned int stage) {
     //    uint32 t1 = GetTickCount();
-    //    Logger::log("Stage %u - %.3f ms\n", stage, float(t1 - t0) / 1000.0f);
+    //    Logger::info("Stage %u - %.3f ms\n", stage, float(t1 - t0) / 1000.0f);
     //    t0 = t1;
     //  };
     //

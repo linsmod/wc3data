@@ -58,40 +58,40 @@ emcc_make_x(){
 EMCC_FLAGS="-O0 -DNO_SYSTEM -DZ_SOLO -I. -g -c"
 # LINKABLE="-s LINKABLE=1"
 # EMCC_FLAGS="-s ERROR_ON_UNDEFINED_SYMBOLS=0"
-emcc_make utils/checksum.cpp -o out/checksum --std=c++11 $EMCC_FLAGS &&
-emcc_make utils/path.cpp -o out/path --std=c++11 $EMCC_FLAGS &&
-emcc_make utils/strlib.cpp -o out/strlib --std=c++11 $EMCC_FLAGS &&
-emcc_make hash.cpp -o out/hash --std=c++11 $EMCC_FLAGS &&
-emcc_make utils/file.cpp -o out/file --std=c++11 $EMCC_FLAGS $LINKABLE&&
-emcc_make datafile/objectdata.cpp -o out/objectdata --std=c++11 $EMCC_FLAGS &&
-emcc_make datafile/game.cpp -o out/game --std=c++11 $EMCC_FLAGS &&
-emcc_make datafile/id.cpp -o out/id --std=c++11 $EMCC_FLAGS &&
-emcc_make datafile/metadata.cpp -o out/metadata --std=c++11 $EMCC_FLAGS &&
-emcc_make datafile/slk.cpp -o out/slk --std=c++11 $EMCC_FLAGS &&
-emcc_make datafile/unitdata.cpp -o out/unitdata --std=c++11 $EMCC_FLAGS &&
-emcc_make datafile/westrings.cpp -o out/westrings --std=c++11 $EMCC_FLAGS &&
-emcc_make datafile/wtsdata.cpp -o out/wtsdata --std=c++11 $EMCC_FLAGS &&
-emcc_make rmpq/adpcm/adpcm.cpp -o out/adpcm --std=c++11 $EMCC_FLAGS &&
-emcc_make rmpq/archive.cpp -o out/archive --std=c++11 $EMCC_FLAGS &&
-emcc_make rmpq/common.cpp -o out/common --std=c++11 $EMCC_FLAGS &&
-emcc_make rmpq/compress.cpp -o out/compress --std=c++11 $EMCC_FLAGS &&
-emcc_make rmpq/huffman/huff.cpp -o out/huff --std=c++11 $EMCC_FLAGS &&
-emcc_make rmpq/locale.cpp -o out/locale --std=c++11 $EMCC_FLAGS &&
+emcc_make utils/checksum.cpp -o out/checksum --std=c++17 $EMCC_FLAGS &&
+emcc_make utils/path.cpp -o out/path --std=c++17 $EMCC_FLAGS &&
+emcc_make utils/strlib.cpp -o out/strlib --std=c++17 $EMCC_FLAGS &&
+emcc_make hash.cpp -o out/hash --std=c++17 $EMCC_FLAGS &&
+emcc_make utils/file.cpp -o out/file --std=c++17 $EMCC_FLAGS $LINKABLE&&
+emcc_make datafile/objectdata.cpp -o out/objectdata --std=c++17 $EMCC_FLAGS &&
+emcc_make datafile/game.cpp -o out/game --std=c++17 $EMCC_FLAGS &&
+emcc_make datafile/id.cpp -o out/id --std=c++17 $EMCC_FLAGS &&
+emcc_make datafile/metadata.cpp -o out/metadata --std=c++17 $EMCC_FLAGS &&
+emcc_make datafile/slk.cpp -o out/slk --std=c++17 $EMCC_FLAGS &&
+emcc_make datafile/unitdata.cpp -o out/unitdata --std=c++17 $EMCC_FLAGS &&
+emcc_make datafile/westrings.cpp -o out/westrings --std=c++17 $EMCC_FLAGS &&
+emcc_make datafile/wtsdata.cpp -o out/wtsdata --std=c++17 $EMCC_FLAGS &&
+emcc_make rmpq/adpcm/adpcm.cpp -o out/adpcm --std=c++17 $EMCC_FLAGS &&
+emcc_make rmpq/archive.cpp -o out/archive --std=c++17 $EMCC_FLAGS &&
+emcc_make rmpq/common.cpp -o out/common --std=c++17 $EMCC_FLAGS &&
+emcc_make rmpq/compress.cpp -o out/compress --std=c++17 $EMCC_FLAGS &&
+emcc_make rmpq/huffman/huff.cpp -o out/huff --std=c++17 $EMCC_FLAGS &&
+emcc_make rmpq/locale.cpp -o out/locale --std=c++17 $EMCC_FLAGS &&
 emcc_make rmpq/pklib/crc32.c -o out/crc32 $EMCC_FLAGS &&
 emcc_make rmpq/pklib/explode.c -o out/explode $EMCC_FLAGS &&
 emcc_make rmpq/pklib/implode.c -o out/implode $EMCC_FLAGS &&
-emcc_make utils/json.cpp -o out/json --std=c++11 $EMCC_FLAGS &&
-emcc_make utils/utf8.cpp -o out/utf8 --std=c++11 $EMCC_FLAGS &&
-emcc_make parse.cpp -o out/parse --std=c++11 $EMCC_FLAGS &&
-emcc_make search.cpp -o out/search --std=c++11 $EMCC_FLAGS &&
-emcc_make image/image.cpp -o out/image --std=c++11 $EMCC_FLAGS &&
-emcc_make image/imageblp.cpp -o out/imageblp --std=c++11 $EMCC_FLAGS &&
-emcc_make image/imageblp2.cpp -o out/imageblp2 --std=c++11 $EMCC_FLAGS &&
-emcc_make image/imagedds.cpp -o out/imagedds --std=c++11 $EMCC_FLAGS &&
-emcc_make image/imagegif.cpp -o out/imagegif --std=c++11 $EMCC_FLAGS &&
-emcc_make image/imagejpg.cpp -o out/imagejpg --std=c++11 $EMCC_FLAGS &&
-emcc_make image/imagepng.cpp -o out/imagepng --std=c++11 $EMCC_FLAGS &&
-emcc_make image/imagetga.cpp -o out/imagetga --std=c++11 $EMCC_FLAGS &&
+emcc_make utils/json.cpp -o out/json --std=c++17 $EMCC_FLAGS &&
+emcc_make utils/utf8.cpp -o out/utf8 --std=c++17 $EMCC_FLAGS &&
+emcc_make parse.cpp -o out/parse --std=c++17 $EMCC_FLAGS &&
+emcc_make search.cpp -o out/search --std=c++17 $EMCC_FLAGS &&
+emcc_make image/image.cpp -o out/image --std=c++17 $EMCC_FLAGS &&
+emcc_make image/imageblp.cpp -o out/imageblp --std=c++17 $EMCC_FLAGS &&
+emcc_make image/imageblp2.cpp -o out/imageblp2 --std=c++17 $EMCC_FLAGS &&
+emcc_make image/imagedds.cpp -o out/imagedds --std=c++17 $EMCC_FLAGS &&
+emcc_make image/imagegif.cpp -o out/imagegif --std=c++17 $EMCC_FLAGS &&
+emcc_make image/imagejpg.cpp -o out/imagejpg --std=c++17 $EMCC_FLAGS &&
+emcc_make image/imagepng.cpp -o out/imagepng --std=c++17 $EMCC_FLAGS &&
+emcc_make image/imagetga.cpp -o out/imagetga --std=c++17 $EMCC_FLAGS &&
 emcc_make jpeg/source/jcapimin.c -o out/jcapimin $EMCC_FLAGS &&
 emcc_make jpeg/source/jcapistd.c -o out/jcapistd $EMCC_FLAGS &&
 emcc_make jpeg/source/jccoefct.c -o out/jccoefct $EMCC_FLAGS &&
@@ -138,8 +138,8 @@ emcc_make jpeg/source/jmemnobs.c -o out/jmemnobs $EMCC_FLAGS &&
 emcc_make jpeg/source/jquant1.c -o out/jquant1 $EMCC_FLAGS &&
 emcc_make jpeg/source/jquant2.c -o out/jquant2 $EMCC_FLAGS &&
 emcc_make jpeg/source/jutils.c -o out/jutils $EMCC_FLAGS &&
-emcc_make jass.cpp -o out/jass --std=c++11 $EMCC_FLAGS &&
-emcc_make detect.cpp -o out/detect --std=c++11 $EMCC_FLAGS &&
+emcc_make jass.cpp -o out/jass --std=c++17 $EMCC_FLAGS &&
+emcc_make detect.cpp -o out/detect --std=c++17 $EMCC_FLAGS &&
 emcc_make zlib/source/adler32.c -o out/adler32 $EMCC_FLAGS &&
 emcc_make zlib/source/compress.c -o out/compress1 $EMCC_FLAGS &&
 emcc_make zlib/source/crc32.c -o out/crc321 $EMCC_FLAGS &&
@@ -151,8 +151,8 @@ emcc_make zlib/source/inftrees.c -o out/inftrees $EMCC_FLAGS &&
 emcc_make zlib/source/trees.c -o out/trees $EMCC_FLAGS &&
 emcc_make zlib/source/uncompr.c -o out/uncompr $EMCC_FLAGS &&
 emcc_make zlib/source/zutil.c -o out/zutil $EMCC_FLAGS &&
-emcc_make utils/common.cpp -o out/common1 --std=c++11 $EMCC_FLAGS &&
-emcc_make webmain.cpp -o out/webmain --std=c++11 $EMCC_FLAGS && #
-emcc_make webarc.cpp -o out/webarc --std=c++11 $EMCC_FLAGS &&
-emcc_make_x out/adler32 out/compress1 out/crc321 out/deflate out/infback out/inffast out/inflate out/inftrees out/trees out/uncompr out/zutil out/checksum out/common1 out/file out/path out/strlib out/hash out/game out/id out/metadata out/objectdata out/slk out/unitdata out/westrings out/wtsdata out/adpcm out/archive out/common out/compress out/huff out/locale out/crc32 out/explode out/implode out/json out/utf8 out/parse out/search out/webmain -o MapParser.js -s EXPORT_NAME="MapParser" -O3 -s WASM=1 -s MODULARIZE=1 -s EXPORTED_FUNCTIONS="['_malloc', '_free']" --post-js ./module-post.js -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=134217728 -s DISABLE_EXCEPTION_CATCHING=0 &&
-emcc_make_x out/adler32 out/compress1 out/crc321 out/deflate out/infback out/inffast out/inflate out/inftrees out/trees out/uncompr out/zutil out/checksum out/common1 out/file out/path out/strlib out/hash out/webarc out/image out/imageblp out/imageblp2 out/imagedds out/imagegif out/imagejpg out/imagepng out/imagetga out/jcapimin out/jcapistd out/jccoefct out/jccolor out/jcdctmgr out/jchuff out/jcinit out/jcmainct out/jcmarker out/jcmaster out/jcomapi out/jcparam out/jcphuff out/jcprepct out/jcsample out/jctrans out/jdapimin out/jdapistd out/jdatadst out/jdatasrc out/jdcoefct out/jdcolor out/jddctmgr out/jdhuff out/jdinput out/jdmainct out/jdmarker out/jdmaster out/jdmerge out/jdphuff out/jdpostct out/jdsample out/jdtrans out/jerror out/jfdctflt out/jfdctfst out/jfdctint out/jidctflt out/jidctfst out/jidctint out/jidctred out/jmemmgr out/jmemnobs out/jquant1 out/jquant2 out/jutils out/jass out/detect out/common -o ArchiveLoader.js -s EXPORT_NAME="ArchiveLoader" -O3 -s WASM=1 -s MODULARIZE=1 -s EXPORTED_FUNCTIONS="['_malloc', '_free']" --post-js ./module-post.js -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=5242880
+emcc_make utils/common.cpp -o out/common1 --std=c++17 $EMCC_FLAGS &&
+emcc_make webmain.cpp -o out/webmain --std=c++17 $EMCC_FLAGS && #
+emcc_make webarc.cpp -o out/webarc --std=c++17 $EMCC_FLAGS &&
+emcc_make_x out/adler32 out/compress1 out/crc321 out/deflate out/infback out/inffast out/inflate out/inftrees out/trees out/uncompr out/zutil out/checksum out/common1 out/file out/path out/strlib out/hash out/game out/id out/metadata out/objectdata out/slk out/unitdata out/westrings out/wtsdata out/adpcm out/archive out/common out/compress out/huff out/locale out/crc32 out/explode out/implode out/json out/utf8 out/parse out/search out/webmain -o MapParser.mjs -s EXPORT_NAME="MapParser" -O3 -s WASM=1 -s MODULARIZE=1 -s EXPORTED_FUNCTIONS="['_malloc', '_free']" --post-js ./module-post.js -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=134217728 -s DISABLE_EXCEPTION_CATCHING=0 &&
+emcc_make_x out/adler32 out/compress1 out/crc321 out/deflate out/infback out/inffast out/inflate out/inftrees out/trees out/uncompr out/zutil out/checksum out/common1 out/file out/path out/strlib out/hash out/webarc out/image out/imageblp out/imageblp2 out/imagedds out/imagegif out/imagejpg out/imagepng out/imagetga out/jcapimin out/jcapistd out/jccoefct out/jccolor out/jcdctmgr out/jchuff out/jcinit out/jcmainct out/jcmarker out/jcmaster out/jcomapi out/jcparam out/jcphuff out/jcprepct out/jcsample out/jctrans out/jdapimin out/jdapistd out/jdatadst out/jdatasrc out/jdcoefct out/jdcolor out/jddctmgr out/jdhuff out/jdinput out/jdmainct out/jdmarker out/jdmaster out/jdmerge out/jdphuff out/jdpostct out/jdsample out/jdtrans out/jerror out/jfdctflt out/jfdctfst out/jfdctint out/jidctflt out/jidctfst out/jidctint out/jidctred out/jmemmgr out/jmemnobs out/jquant1 out/jquant2 out/jutils out/jass out/detect out/common -o ArchiveLoader.mjs -s EXPORT_NAME="ArchiveLoader" -O3 -s WASM=1 -s MODULARIZE=1 -s EXPORTED_FUNCTIONS="['_malloc', '_free']" --post-js ./module-post.js -s ALLOW_MEMORY_GROWTH=1 -s TOTAL_MEMORY=5242880

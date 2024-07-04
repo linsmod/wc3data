@@ -22,7 +22,7 @@
 // #endif
 
 // 使用ncurses的窗口句柄类型，这部分代码可以保留，因为它已经是POSIX兼容的
-typedef WINDOW* HANDLE;
+typedef WINDOW *HANDLE;
 typedef void VOID;
 typedef unsigned long DWORD;
 
@@ -37,53 +37,52 @@ typedef unsigned long DWORD;
 
 // 初始化和结束ncurses环境
 void ConsoleStart() {
-    initscr();
-    start_color();
-    for (int i = 1; i <= 7; ++i) {
-        init_pair(i, i, COLOR_BLACK);
-    }
-    attron(COLOR_PAIR(7));
+  initscr();
+  start_color();
+  for (int i = 1; i <= 7; ++i) {
+    init_pair(i, i, COLOR_BLACK);
+  }
+  attron(COLOR_PAIR(7));
 }
 
-void ConsoleEnd() {
-    endwin();
-}
+void ConsoleEnd() { endwin(); }
 
 // 设置文本属性
 void SetConsoleTextAttribute(HANDLE console, int color) {
-    // if (color != _consoleColor) {
-    //     attroff(COLOR_PAIR(_consoleColor));
-    //     attron(COLOR_PAIR(_consoleColor = color));
-    // }
+  // if (color != _consoleColor) {
+  //     attroff(COLOR_PAIR(_consoleColor));
+  //     attron(COLOR_PAIR(_consoleColor = color));
+  // }
 }
 
 // 获取光标位置的模拟在ncurses中通过getcury和getcurx实现，这部分代码可以省略或内联到需要使用的地方
 // struct CONSOLE_SCREEN_BUFFER_INFO {
 //     COORD dwCursorPosition;
 // };
-// void GetConsoleScreenBufferInfo(HANDLE console, CONSOLE_SCREEN_BUFFER_INFO* info) {
+// void GetConsoleScreenBufferInfo(HANDLE console, CONSOLE_SCREEN_BUFFER_INFO*
+// info) {
 //     ...
 // }
 
 // 对于_getch函数，使用termios进行非缓冲输入的处理已经正确，保持不变
 int _getch() {
-    struct termios t1, t2;
-    tcgetattr(0, &t1);
-    t2 = t1;
-    t2.c_lflag &= ~ICANON;
-    t2.c_lflag &= ~ECHO;
-    tcsetattr(0, TCSANOW, &t2);
-    int ch = getchar();
-    tcsetattr(0, TCSANOW, &t1);
-    return ch;
+  struct termios t1, t2;
+  tcgetattr(0, &t1);
+  t2 = t1;
+  t2.c_lflag &= ~ICANON;
+  t2.c_lflag &= ~ECHO;
+  tcsetattr(0, TCSANOW, &t2);
+  int ch = getchar();
+  tcsetattr(0, TCSANOW, &t1);
+  return ch;
 }
 
-// 注意：原始代码中的WriteConsole和SetConsoleCursorPosition函数已经在ncurses环境中通过wprintw, wmove等函数间接实现，
+// 注意：原始代码中的WriteConsole和SetConsoleCursorPosition函数已经在ncurses环境中通过wprintw,
+// wmove等函数间接实现，
 // 因此，如果这些函数在其他地方被调用，应该直接使用ncurses提供的API。
 
-Logger::Logger()
-  : logfile(nullptr)
-{
+Logger::Logger() : logfile(nullptr) {
+  this->currentLogLevel = LogLevel::DEBUG;
 #ifndef NOLOGGER
   ConsoleStart();
 #endif
@@ -105,7 +104,7 @@ struct Logger::Task {
   };
 
   HANDLE handle;
-  Task* parent;
+  Task *parent;
   std::string name;
   std::string line;
   int count;
@@ -118,43 +117,46 @@ struct Logger::Task {
   typedef std::list<Task>::iterator Iter;
 
   Task();
-  Task(Task* parent, int count, std::string const& name);
+  Task(Task *parent, int count, std::string const &name);
   ~Task();
 
   void erase();
   void draw();
-  void write(std::string const& text);
+  void write(std::string const &text);
   void move(int y);
-  void item(char const* text);
+  void item(char const *text);
   void progress(int count, bool add = true);
   void close();
-  Iter find(Task* task);
+  Iter find(Task *task);
   void update(Iter from);
   void shift(Iter from);
   void rupdate(Iter from);
   void rshift(Iter from);
-  void remove(Task* task);
-  Task* insert(int count, std::string const& name);
+  void remove(Task *task);
+  Task *insert(int count, std::string const &name);
 };
 
 static Logger::Task _root;
-Logger::Task* Logger::root = &_root;
-Logger::Task* Logger::top = nullptr;
+Logger::Task *Logger::root = &_root;
+Logger::Task *Logger::top = nullptr;
 
 void Logger::Task::move(int y) {
   erase();
   // pos.Y = y;
   draw();
 }
-void Logger::Task::item(char const* text) {
+void Logger::Task::item(char const *text) {
   ++index;
   if (GetTickCount() > time + 200) {
-    write(text ? (name.empty() ? text : fmtstring("%s: %s", name.c_str(), text)) : name);
+    write(text ? (name.empty() ? text : fmtstring("%s: %s", name.c_str(), text))
+               : name);
   }
 }
 void Logger::Task::progress(int count, bool add) {
-  if (add) index += count;
-  else index = count;
+  if (add)
+    index += count;
+  else
+    index = count;
   if (GetTickCount() > time + 200) {
     write(name);
   }
@@ -170,8 +172,8 @@ void Logger::Task::draw() {
   line.clear();
   write(prev);
 }
-#include <iostream> // 包含输入输出流库  
-void Logger::Task::write(std::string const& text) {
+#include <iostream> // 包含输入输出流库
+void Logger::Task::write(std::string const &text) {
   std::string buf;
   if (count < 0) {
     if (count == cLog) {
@@ -210,25 +212,26 @@ void Logger::Task::close() {
   index = count;
   write(name);
   if (sub.size()) {
-    for (auto& x : sub) {
+    for (auto &x : sub) {
       x.erase();
     }
     sub.clear();
     int delta = height - 1;
-    for (Task* cur = this; cur; cur = cur->parent) {
+    for (Task *cur = this; cur; cur = cur->parent) {
       cur->height -= delta;
     }
     shift(sub.end());
   }
 }
-Logger::Task::Iter Logger::Task::find(Task* task) {
+Logger::Task::Iter Logger::Task::find(Task *task) {
   for (Iter it = sub.begin(); it != sub.end(); ++it) {
-    if (&*it == task) return it;
+    if (&*it == task)
+      return it;
   }
   return sub.end();
 }
 void Logger::Task::update(Iter from) {
-  Task* prev = nullptr;
+  Task *prev = nullptr;
   if (from != sub.begin()) {
     prev = &*std::prev(from);
   }
@@ -248,8 +251,9 @@ void Logger::Task::shift(Iter from) {
   }
 }
 void Logger::Task::rupdate(Iter from) {
-  if (from == sub.end()) return;
-  Task* to = &*from;
+  if (from == sub.end())
+    return;
+  Task *to = &*from;
   // int prev = pos.Y + height;
   // for (auto it = sub.rbegin(); it != sub.rend(); ++it) {
   //   it->rupdate(it->sub.begin());
@@ -267,10 +271,11 @@ void Logger::Task::rshift(Iter from) {
   }
   rupdate(from);
 }
-void Logger::Task::remove(Task* task) {
+void Logger::Task::remove(Task *task) {
   Iter pos = find(task);
-  if (pos == sub.end()) return;
-  for (Task* cur = this; cur; cur = cur->parent) {
+  if (pos == sub.end())
+    return;
+  for (Task *cur = this; cur; cur = cur->parent) {
     cur->height -= task->height;
   }
   task->close();
@@ -279,8 +284,8 @@ void Logger::Task::remove(Task* task) {
   sub.erase(pos);
   shift(next);
 }
-Logger::Task* Logger::Task::insert(int count, std::string const& name) {
-  for (Task* cur = this; cur; cur = cur->parent) {
+Logger::Task *Logger::Task::insert(int count, std::string const &name) {
+  for (Task *cur = this; cur; cur = cur->parent) {
     ++cur->height;
   }
   rshift(sub.end());
@@ -289,29 +294,16 @@ Logger::Task* Logger::Task::insert(int count, std::string const& name) {
 }
 
 Logger::Task::Task()
-  : handle(0)
-  , parent(nullptr)
-  , count(0)
-  , index(0)
-  , height(1)
-  , msize(0)
-  , time(0)
-{
+    : handle(0), parent(nullptr), count(0), index(0), height(1), msize(0),
+      time(0) {
   // CONSOLE_SCREEN_BUFFER_INFO info;
   // GetConsoleScreenBufferInfo(handle, &info);
   // pos.X = -2;
   // pos.Y = info.dwCursorPosition.Y - 1;
 }
-Logger::Task::Task(Task* parent, int count, std::string const& name)
-  : handle(0)
-  , parent(parent)
-  , name(name)
-  , count(count)
-  , index(-1)
-  , height(1)
-  , msize(0)
-  , time(0)
-{
+Logger::Task::Task(Task *parent, int count, std::string const &name)
+    : handle(0), parent(parent), name(name), count(count), index(-1), height(1),
+      msize(0), time(0) {
   // pos.X = parent->pos.X + 2;
   if (parent->sub.empty()) {
     // pos.Y = parent->pos.Y + 1;
@@ -322,68 +314,102 @@ Logger::Task::Task(Task* parent, int count, std::string const& name)
   write(name);
 }
 Logger::Task::~Task() {
-  //if (parent) {
+  // if (parent) {
   //  erase();
   //}
 }
 
 #ifdef NOLOGGER
-static int _level = 0;
-void* Logger::begin(size_t count, char const* name, void* task_) {
-  for (int i = 0; i < _level; ++i) {
-   fprintf(stderr, "  ");
-   Logger::print("  ");
+void *Logger::begin(size_t count, char const *name, void *task_) {
+  for (int i = 0; i < instance.pad_left; ++i) {
+    Logger::puts("  ");
   }
-//  fprintf(stderr, "%s\n", name);
-  Logger::println(name);
-  ++_level;
+  Logger::puts("  ");
+  Logger::puts(name);
+  Logger::puts("\n");
+  ++instance.pad_left;
   return nullptr;
 }
-void Logger::item(char const* name, void* task_) {
-  for (int i = 0; i < _level; ++i) {
-  //  fprintf(stderr, "  ");
-    Logger::print("  ");
+void Logger::item(char const *name, void *task_) {
+  for (int i = 0; i < instance.pad_left; ++i) {
+    Logger::puts("  ");
   }
-//  fprintf(stderr, "%s\n", name);
- Logger::println(name);
+  Logger::puts(name);
+  Logger::puts("\n");
 }
-void Logger::progress(size_t count, bool add, void* task_) {}
-void Logger::end(bool pop, void* task_) {
-  --_level;
-}
+void Logger::progress(size_t count, bool add, void *task_) {}
+void Logger::end(bool pop, void *task_) { --instance.pad_left; }
 #include "utils/path.h"
-void Logger::log(char const* fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  std::string text = varfmtstring(fmt, ap);
-  va_end(ap);
-  fprintf(stderr, "%s\n", text.c_str());
-
-  if (!instance.logfile) {
-    instance.logfile = new File(path::root() / "log.txt", "at");
-    instance.logfile->printf("============\n");
+std::string getLogLevelString(LogLevel level) {
+  switch (level) {
+  case LogLevel::DEBUG:
+    return "DEBUG";
+  case LogLevel::INFO:
+    return "INFO";
+  case LogLevel::ERROR:
+    return "ERROR";
+  case LogLevel::WARN:
+    return "WARN";
+  default:
+    return "DEBUG";
   }
-  instance.logfile->printf("%s\n", text.c_str());
 }
-void Logger::println(char const* fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  std::string text = varfmtstring(fmt, ap);
-  va_end(ap);
-  // fprintf(stderr, "%s\n", text.c_str());
+void Logger::log(LogLevel level, char const *fmt, ...) {
+  if (level <= instance.currentLogLevel) {
+    va_list ap;
+    va_start(ap, fmt);
+    std::string text = varfmtstring(fmt, ap); // 确保这个函数可以正确处理va_list
+    va_end(ap);
 
-  if (!instance.logfile) {
-    instance.logfile = new File(path::root() / "log.txt", "at");
-    instance.logfile->printf("============\n");
+    fprintf(stderr, "[%s] %s\n", getLogLevelString(level).c_str(),
+            text.c_str());
+
+    if (!instance.logfile) {
+      instance.logfile = new File(path::root() / "log.txt", "at");
+      instance.logfile->printf("============\n");
+    }
+    instance.logfile->printf("[%s] %s\n", getLogLevelString(level).c_str(),
+                             text.c_str());
   }
-  instance.logfile->printf("%s\n", text.c_str());
 }
-void Logger::print(char const* fmt, ...) {
+void Logger::debug(char const *fmt, ...) {
+  if (LogLevel::DEBUG <= instance.currentLogLevel) {
+    va_list ap;
+    va_start(ap, fmt);
+    log(LogLevel::DEBUG, fmt, ap);
+    va_end(ap);
+  }
+}
+void Logger::info(char const *fmt, ...) {
+  if (LogLevel::INFO <= instance.currentLogLevel) {
+    va_list ap;
+    va_start(ap, fmt);
+    log(LogLevel::DEBUG, fmt, ap);
+    va_end(ap);
+  }
+}
+void Logger::warn(char const *fmt, ...) {
+  if (LogLevel::WARN <= instance.currentLogLevel) {
+    va_list ap;
+    va_start(ap, fmt);
+    log(LogLevel::DEBUG, fmt, ap);
+    va_end(ap);
+  }
+}
+void Logger::error(char const *fmt, ...) {
+  if (LogLevel::ERROR <= instance.currentLogLevel) {
+    va_list ap;
+    va_start(ap, fmt);
+    log(LogLevel::DEBUG, fmt, ap);
+    va_end(ap);
+  }
+}
+void Logger::puts(char const *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   std::string text = varfmtstring(fmt, ap);
   va_end(ap);
-  // fprintf(stderr, "%s\n", text.c_str());
+  fprintf(stderr, "%s", text.c_str());
 
   if (!instance.logfile) {
     instance.logfile = new File(path::root() / "log.txt", "at");
@@ -391,23 +417,31 @@ void Logger::print(char const* fmt, ...) {
   }
   instance.logfile->printf("%s", text.c_str());
 }
+void Logger::remove () {
+  if (!instance.logfile) {
+    instance.logfile = new File(path::root() / "log.txt", "at");
+    instance.logfile->remove();
+  }
+}
 #else
-void* Logger::begin(size_t count, char const* name, void* task_) {
-  Task* task = (task_ ? (Task*)task_ : top);
-  if (!task) task = root;
+void *Logger::begin(size_t count, char const *name, void *task_) {
+  Task *task = (task_ ? (Task *)task_ : top);
+  if (!task)
+    task = root;
   return top = task->insert(count, std::string(name ? name : ""));
 }
-void Logger::item(char const* name, void* task_) {
-  Task* task = (task_ ? (Task*)task_ : top);
+void Logger::item(char const *name, void *task_) {
+  Task *task = (task_ ? (Task *)task_ : top);
   task->item(name);
 }
-void Logger::progress(size_t count, bool add, void* task_) {
-  Task* task = (task_ ? (Task*)task_ : top);
+void Logger::progress(size_t count, bool add, void *task_) {
+  Task *task = (task_ ? (Task *)task_ : top);
   task->progress(count, add);
 }
-void Logger::end(bool pop, void* task_) {
-  Task* task = (task_ ? (Task*)task_ : top);
-  if (top == task) top = task->parent;
+void Logger::end(bool pop, void *task_) {
+  Task *task = (task_ ? (Task *)task_ : top);
+  if (top == task)
+    top = task->parent;
   if (pop) {
     task->parent->remove(task);
   } else {
@@ -415,7 +449,7 @@ void Logger::end(bool pop, void* task_) {
   }
 }
 
-void Logger::log(char const* fmt, ...) {
+void Logger::log(char const *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
   std::string text = varfmtstring(fmt, ap);
@@ -431,8 +465,8 @@ void Logger::log(char const* fmt, ...) {
 
 #include <iostream>
 
-int Logger::menu(char const* title, std::vector<std::string> const& options) {
-  Task* task = root->insert(Task::cMenu, title);
+int Logger::menu(char const *title, std::vector<std::string> const &options) {
+  Task *task = root->insert(Task::cMenu, title);
   int digits = 1, mul = 1;
   if (options.size() > 99) {
     digits = 3, mul = 100;
@@ -452,12 +486,14 @@ int Logger::menu(char const* title, std::vector<std::string> const& options) {
       continue;
     }
     if (chr == 8) {
-      if (!pos) continue;
+      if (!pos)
+        continue;
       --pos;
       mul *= 10;
       input /= 10;
     } else if (chr == 27) {
-      if (!pos) continue;
+      if (!pos)
+        continue;
       while (pos) {
         --pos;
         mul *= 10;
@@ -465,7 +501,8 @@ int Logger::menu(char const* title, std::vector<std::string> const& options) {
       }
     } else {
       int next = input * 10 + (chr - '0');
-      if (static_cast<size_t>(next * mul) > options.size()) continue;
+      if (static_cast<size_t>(next * mul) > options.size())
+        continue;
       input = next;
       mul /= 10;
       ++pos;
@@ -480,9 +517,11 @@ int Logger::menu(char const* title, std::vector<std::string> const& options) {
     task->menu.resize(digits, '?');
     task->draw();
     size_t first = input * 10 * mul;
-    if (!first) first = 1;
+    if (!first)
+      first = 1;
     size_t last = (input * 10 + 9) * mul;
-    if (last > options.size()) last = options.size();
+    if (last > options.size())
+      last = options.size();
     for (size_t i = first; i <= last; ++i) {
       task->insert(Task::cMenuOption - (i - input * 10 * mul), options[i - 1]);
     }
@@ -491,12 +530,13 @@ int Logger::menu(char const* title, std::vector<std::string> const& options) {
   return input - 1;
 }
 
-int Logger::menu(char const* title, std::map<char, std::string> const& options) {
-  Task* task = root->insert(Task::cMenu, title);
+int Logger::menu(char const *title,
+                 std::map<char, std::string> const &options) {
+  Task *task = root->insert(Task::cMenu, title);
   task->msize = -1;
   task->menu = "?";
   task->draw();
-  for (auto const& kv : options) {
+  for (auto const &kv : options) {
     task->insert(Task::cMenuOption - kv.first, kv.second);
   }
 

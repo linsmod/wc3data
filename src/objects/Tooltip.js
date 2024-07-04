@@ -23,7 +23,7 @@ const TooltipContent = ({ objectId }) => {
   if (!object) return <Popover.Title>Loading...</Popover.Title>;
 
   return (
-    <>
+    <div>
       <Popover.Title>{object.name}</Popover.Title>
       <Popover.Content>
         {object.description || "No description available."}
@@ -35,7 +35,7 @@ const TooltipContent = ({ objectId }) => {
           />
         )}
       </Popover.Content>
-    </>
+    </div>
   );
 };
 

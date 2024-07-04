@@ -308,14 +308,23 @@ module.exports = function(webpackEnv) {
       rules: [
         // Disable require.ensure as it's not a standard language feature.
         { parser: { requireEnsure: false } },
-
+        {
+          test: /\.ArchiveLoader\.jscc$/,
+          loader: "exports-loader",
+          options: {
+            exports: "ArchiveLoader",
+          },
+        },
+        {
+          test: /\.MapParser\.jscc$/,
+          loader: "exports-loader",
+          options: {
+            exports: "MapParser",
+          },
+        },
         {
           test: /\.worker\.js$/,
           loader: 'worker-loader'
-        },
-        {
-          test: /\.jscc$/,
-          loader: "exports-loader",
         },
         // First, run the linter.
         // It's important to do this before Babel processes the JS.

@@ -120,7 +120,7 @@ class App extends React.PureComponent {
             <Navbar.Brand>
               <Link to="/"><span className="AppIcon"/>WC3 Data</Link>
             </Navbar.Brand>
-            <Navbar.Toggle/>
+            <Navbar.Toggle style={{float:'inherit'}}/>
           </Navbar.Header>
           {!!build && <Navbar.Collapse>
             <WithData id={build}>

@@ -142,10 +142,10 @@ File NGDP::load(std::string const &hash, std::string const &type, bool index,
     path += ".index";
   File file(path);
   if (file) {
-    Logger::log("[cached] NGDP::load %s",path.c_str());
+    Logger::info("[cached] NGDP::load %s",path.c_str());
     return file;
   }
-  Logger::log("[http_get] NGDP::load %s",path.c_str());
+  Logger::info("[http_get] NGDP::load %s",path.c_str());
   file = HttpRequest::get(geturl(hash, type, index));
   if (!file)
     return file;

@@ -121,7 +121,7 @@ export default function loadArchive(data) {
         return name;
       }
     }
-  }).ready.then(wasm => {
+  }).then(wasm => {
     const array = new Uint8Array(data);
     const addr = wasm._malloc(array.length);
     wasm.HEAPU8.set(array, addr);

@@ -251,7 +251,6 @@ export default class ModelViewer extends EventEmitter {
                 resource.loadData(data);
               } else {
                 resource.error('FailedToFetch');
-
                 this.emit('error', resource, response.error, data);
               }
             });

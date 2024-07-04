@@ -655,7 +655,7 @@ ImageBase<color_t> ImageBase<color_t>::resize(int width, int height, Filter filt
   ImageBase<color_t> cur(*this);
   if (cur.width() != width) {
     ImagePrivate::LinScaler<color_t, Filter> scaler(cur.width(), width, static_cast<double>(width) / static_cast<double>(cur.width()));
-    // Logger::log("resize width=%u,height=%u",width, cur.height());
+    // Logger::info("resize width=%u,height=%u",width, cur.height());
     ImageBase<color_t> next(width, cur.height());
     for (int y = 0; y < cur.height(); ++y) {
       scaler.scale(cur.bits() + y * cur.width(), 1, next.mutable_bits() + y * next.width(), 1);

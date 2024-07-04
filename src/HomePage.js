@@ -77,7 +77,7 @@ export default class HomePage extends React.Component {
 
   render() {
     const cache = this.context;
-
+    cache.custom = cache.custom || {};
     return (
       <div className="HomePage">
         {this.state.message != null && (

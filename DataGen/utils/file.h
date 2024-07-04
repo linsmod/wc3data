@@ -1,9 +1,12 @@
 #pragma once
 
 #include "common.h"
-#include <string>
 #include <memory>
-
+#include <string>
+#ifndef NO_SYSTEM
+#include <filesystem>
+namespace fs = std::filesystem;
+#endif
 class FileBuffer {
 public:
   virtual ~FileBuffer() {}
@@ -15,9 +18,7 @@ public:
     }
     return chr;
   }
-  virtual void putc(int chr) {
-    write(&chr, 1);
-  }
+  virtual void putc(int chr) { write(&chr, 1); }
 
   virtual uint64 tell() const = 0;
   virtual void seek(int64 pos, int mode) = 0;
@@ -29,45 +30,36 @@ public:
     return res;
   }
 
-  virtual size_t read(void* ptr, size_t size) = 0;
-  virtual size_t write(void const* ptr, size_t size) = 0;
+  virtual size_t read(void *ptr, size_t size) = 0;
+  virtual size_t write(void const *ptr, size_t size) = 0;
 };
 
 class File {
 protected:
   std::shared_ptr<FileBuffer> file_;
+
 public:
-  File()
-  {}
-  File(std::shared_ptr<FileBuffer> const& file)
-    : file_(file)
-  {}
-  File(File const& file)
-    : file_(file.file_)
-  {}
-  File(File&& file)
-    : file_(std::move(file.file_))
-  {}
+  File() {}
+  File(std::shared_ptr<FileBuffer> const &file) : file_(file) {}
+  File(File const &file) : file_(file.file_) {}
+  File(File &&file) : file_(std::move(file.file_)) {}
 
 #ifndef NO_SYSTEM
-  explicit File(char const* name, char const* mode = "rb");
-  explicit File(std::string const& name, char const* mode = "rb")
-    : File(name.c_str(), mode)
-  {}
+  explicit File(char const *name, char const *mode = "rb");
+  explicit File(std::string const &name, char const *mode = "rb")
+      : File(name.c_str(), mode) {}
 #endif
 
-  void release() {
-    file_.reset();
-  }
+  void release() { file_.reset(); }
 
-  File& operator=(File const& file) {
+  File &operator=(File const &file) {
     if (file_ == file.file_) {
       return *this;
     }
     file_ = file.file_;
     return *this;
   }
-  File& operator=(File&& file) {
+  File &operator=(File &&file) {
     if (file_ == file.file_) {
       return *this;
     }
@@ -75,32 +67,17 @@ public:
     return *this;
   }
 
-  operator bool() const {
-    return file_ != nullptr;
-  }
+  operator bool() const { return file_ != nullptr; }
 
-  int getc() {
-    return file_->getc();
-  }
-  void putc(int chr) {
-    file_->putc(chr);
-  }
+  int getc() { return file_->getc(); }
+  void putc(int chr) { file_->putc(chr); }
 
-  void seek(int64 pos, int mode = SEEK_SET) {
-    file_->seek(pos, mode);
-  }
-  uint64 tell() const {
-    return file_->tell();
-  }
-  uint64 size() {
-    return file_->size();
-  }
+  void seek(int64 pos, int mode = SEEK_SET) { file_->seek(pos, mode); }
+  uint64 tell() const { return file_->tell(); }
+  uint64 size() { return file_->size(); }
 
-  size_t read(void* dst, size_t size) {
-    return file_->read(dst, size);
-  }
-  template<class T>
-  T read() {
+  size_t read(void *dst, size_t size) { return file_->read(dst, size); }
+  template <class T> T read() {
     T x;
     file_->read(&x, sizeof(T));
     return x;
@@ -113,53 +90,53 @@ public:
   uint16 read16(bool big = false) {
     uint16 x;
     file_->read(&x, 2);
-    if (big) flip(x);
+    if (big)
+      flip(x);
     return x;
   }
   uint32 read32(bool big = false) {
     uint32 x;
     file_->read(&x, 4);
-    if (big) flip(x);
+    if (big)
+      flip(x);
     return x;
   }
   uint64 read64(bool big = false) {
     uint64 x;
     file_->read(&x, 8);
-    if (big) flip(x);
+    if (big)
+      flip(x);
     return x;
   }
 
-  size_t write(void const* ptr, size_t size) {
-    return file_->write(ptr, size);
-  }
-  template<class T>
-  bool write(T const& x) {
+  size_t write(void const *ptr, size_t size) { return file_->write(ptr, size); }
+  template <class T> bool write(T const &x) {
     return file_->write(&x, sizeof(T)) == sizeof(T);
   }
-  bool write8(uint8 x) {
-    return file_->write(&x, 1) == 1;
-  }
+  bool write8(uint8 x) { return file_->write(&x, 1) == 1; }
   bool write16(uint16 x, bool big = false) {
-    if (big) flip(x);
+    if (big)
+      flip(x);
     return file_->write(&x, 2) == 2;
   }
   bool write32(uint32 x, bool big = false) {
-    if (big) flip(x);
+    if (big)
+      flip(x);
     return file_->write(&x, 4) == 4;
   }
   bool write64(uint64 x, bool big = false) {
-    if (big) flip(x);
+    if (big)
+      flip(x);
     return file_->write(&x, 8) == 8;
   }
 
-  void printf(char const* fmt, ...);
+  void printf(char const *fmt, ...);
 
-  bool getline(std::string& line);
-  bool getwline(std::wstring& line);
-  bool getwline_flip(std::wstring& line);
+  bool getline(std::string &line);
+  bool getwline(std::wstring &line);
+  bool getwline_flip(std::wstring &line);
 
-  template<class string_t>
-  class LineIterator;
+  template <class string_t> class LineIterator;
 
   LineIterator<std::string> begin();
   LineIterator<std::string> end();
@@ -170,16 +147,18 @@ public:
   File subfile(uint64 offset, uint64 size);
 
   void copy(File src, uint64 size = max_uint64);
-  void md5(void* digest);
+  void md5(void *digest);
 
-  std::shared_ptr<FileBuffer> buffer() const {
-    return file_;
-  }
+  std::shared_ptr<FileBuffer> buffer() const { return file_; }
 
 #ifndef NO_SYSTEM
-  static bool exists(char const* path);
-  static bool exists(std::string const& path) {
-    return exists(path.c_str());
+  static bool exists(char const *path);
+  static bool exists(std::string const &path) { return exists(path.c_str()); }
+  static void remove() {
+    fs::path filePath = "path/to/your/file.txt"; // 指定文件路径
+    if (fs::exists(filePath) && fs::is_regular_file(filePath)) {
+      fs::remove(filePath);
+    }
   }
 #endif
 };
@@ -187,51 +166,41 @@ public:
 class MemoryFile : public File {
 public:
   MemoryFile();
-  MemoryFile(std::vector<uint8> const& data);
-  MemoryFile(std::vector<uint8>&& data);
-  MemoryFile(void const* data, size_t size);
-  MemoryFile(File const& file);
+  MemoryFile(std::vector<uint8> const &data);
+  MemoryFile(std::vector<uint8> &&data);
+  MemoryFile(void const *data, size_t size);
+  MemoryFile(File const &file);
 
   static MemoryFile from(File file);
 
-  uint8 const* data() const;
-  uint8* alloc(size_t size);
+  uint8 const *data() const;
+  uint8 *alloc(size_t size);
   void resize(size_t size);
 };
 
-template<class string_t>
-class File::LineIterator {
+template <class string_t> class File::LineIterator {
   friend class File;
-  typedef bool(File::*getter_t)(string_t& line);
+  typedef bool (File::*getter_t)(string_t &line);
   File file_;
   string_t line_;
   getter_t getter_ = nullptr;
-  LineIterator(File& file, getter_t getter)
-    : getter_(getter)
-  {
+  LineIterator(File &file, getter_t getter) : getter_(getter) {
     if ((file.*getter_)(line_)) {
       file_ = file;
     }
   }
+
 public:
   LineIterator() {}
 
-  string_t const& operator*() {
-    return line_;
-  }
-  string_t const* operator->() {
-    return &line_;
-  }
+  string_t const &operator*() { return line_; }
+  string_t const *operator->() { return &line_; }
 
-  bool operator!=(LineIterator const& it) const {
-    return file_ != it.file_;
-  }
+  bool operator!=(LineIterator const &it) const { return file_ != it.file_; }
 
-  bool valid() {
-    return file_;
-  }
+  bool valid() { return file_; }
 
-  LineIterator& operator++() {
+  LineIterator &operator++() {
     if (!(file_.*getter_)(line_)) {
       file_.release();
     }
@@ -241,16 +210,11 @@ public:
 
 class WideFile {
 public:
-  WideFile(File const& file)
-    : file_(file)
-  {}
+  WideFile(File const &file) : file_(file) {}
 
-  File::LineIterator<std::wstring> begin() {
-    return file_.wbegin();
-  }
-  File::LineIterator<std::wstring> end() {
-    return file_.wend();
-  }
+  File::LineIterator<std::wstring> begin() { return file_.wbegin(); }
+  File::LineIterator<std::wstring> end() { return file_.wend(); }
+
 private:
   File file_;
 };
@@ -272,12 +236,13 @@ class Archive {
     bool compress();
     MemoryFile decompress();
   };
+
 public:
   Archive() {}
   Archive(File file);
 
   bool has(uint64 id);
-  File& create(uint64 id, bool compression = false);
+  File &create(uint64 id, bool compression = false);
   MemoryFile open(uint64 id);
 
   void add(uint64 id, File file, bool compression = false);
@@ -286,12 +251,8 @@ public:
 
   using iterator = key_iterator<std::map<uint64, ArchiveFile>>;
 
-  iterator begin() const {
-    return iterator(files_.begin());
-  }
-  iterator end() const {
-    return iterator(files_.end());
-  }
+  iterator begin() const { return iterator(files_.begin()); }
+  iterator end() const { return iterator(files_.end()); }
 
 private:
   std::map<uint64, ArchiveFile> files_;
@@ -299,20 +260,17 @@ private:
 
 class FileLoader {
 public:
-  virtual ~FileLoader() {};
+  virtual ~FileLoader(){};
 
-  virtual File load(char const* path) = 0;
+  virtual File load(char const *path) = 0;
 };
 
 #ifndef NO_SYSTEM
 class SystemLoader : public FileLoader {
 public:
-  SystemLoader(std::string const& root = "")
-    : root_(root)
-  {
-  }
+  SystemLoader(std::string const &root = "") : root_(root) {}
 
-  virtual File load(char const* path) override;
+  virtual File load(char const *path) override;
 
 private:
   std::string root_;
@@ -321,13 +279,10 @@ private:
 
 class PrefixLoader : public FileLoader {
 public:
-  PrefixLoader(std::string const& prefix, std::shared_ptr<FileLoader> loader)
-    : prefix_(prefix)
-    , loader_(loader)
-  {
-  }
+  PrefixLoader(std::string const &prefix, std::shared_ptr<FileLoader> loader)
+      : prefix_(prefix), loader_(loader) {}
 
-  virtual File load(char const* path) override {
+  virtual File load(char const *path) override {
     return loader_->load((prefix_ + path).c_str());
   }
 
@@ -339,7 +294,7 @@ private:
 class CompositeLoader : public FileLoader {
 public:
   void add(std::shared_ptr<FileLoader> loader);
-  virtual File load(char const* path) override;
+  virtual File load(char const *path) override;
 
 private:
   std::vector<std::shared_ptr<FileLoader>> loaders_;

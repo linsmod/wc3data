@@ -3,7 +3,7 @@ import ParserModule from './MapParser.jscc';
 
 /* eslint-disable-next-line no-restricted-globals */
 self.onmessage = function(e) {
-  ParserModule({
+  let module = ParserModule({
     locateFile(name) {
       if (name === "MapParser.wasm") {
         return ParserBinary;
@@ -11,7 +11,9 @@ self.onmessage = function(e) {
         return name;
       }
     }
-  }).ready.then(wasm => {
+  });
+  console.log('ParserModule created',module)
+  module.then(wasm => {
 
     try {
       const meta = new Uint8Array(e.data.meta);
