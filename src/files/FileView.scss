@@ -78,7 +78,10 @@
     flex: 1;
     padding: 0;
     overflow: hidden;
+    overflow-y: scroll;
     position: relative;
+    padding-left: 5px;
+    padding-bottom: 10px;
     &.image {
       overflow: auto;
       padding: 12px;
@@ -183,6 +186,14 @@
       border-top-color: #f44;
       border-right-color: #f44;
     }
+  }
+}
+.ReactVirtualized__Table__row{
+  border-bottom: 1px solid #ddd;
+}
+.ReactVirtualized__Table__rowColumn{
+  border-left: 1px solid #ddd;
+  >[title]{
   }
 }
 

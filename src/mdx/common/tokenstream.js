@@ -10,6 +10,36 @@ export default class TokenStream {
     this.index = 0;
     this.ident = 0; // Used for writing blocks nicely.
     this.fractionDigits = 6; // The number of fraction digits when writing floats.
+    this.decoder = new TextDecoder('utf-8');
+    if (this.buffer instanceof ArrayBuffer) {
+      let view = new DataView(buffer);
+      this.length = buffer.byteLength / 4;
+      this.accessPosition = (index) => {
+        return view.getUint8(index)
+      }
+    }
+    else {
+      this.length = buffer.length;
+      this.accessPosition = (index) => {
+        return buffer[index];
+      }
+    }
+  }
+
+  readUntil(ch, fromIndex) {
+    this.index = fromIndex;
+    let token = '';
+    let d = [];
+    while (this.index < this.length) {
+      let c = this.accessPosition(this.index++);
+      let cc = String.fromCharCode(c);
+      if(cc==ch){
+        return this.decoder.decode(new Uint8Array(d))
+      }
+      token+=cc;
+      d.push(c)
+    }
+    return this.decoder.decode(new Uint8Array(d))
   }
 
   /**
@@ -39,15 +69,15 @@ export default class TokenStream {
    * @return {?string}
    */
   read() {
-    let buffer = this.buffer;
-    let length = buffer.length;
+    let length = this.length;
     let inComment = false;
     let inString = false;
     let token = '';
 
-    while (this.index < length) {
-      let c = buffer[this.index++];
 
+    while (this.index < length) {
+      let c = this.accessPosition(this.index++);
+      c = String.fromCharCode(c);
       if (inComment) {
         if (c === '\n') {
           inComment = false;
@@ -69,7 +99,7 @@ export default class TokenStream {
         } else {
           return c;
         }
-      } else if (c === '/' && buffer[this.index] === '/') {
+      } else if (c === '/' && this.accessPosition(this.index) === '/') {
         if (token.length) {
           this.index--;
           return token;

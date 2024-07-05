@@ -165,7 +165,7 @@ export default class War3MapW3i {
 
       this.forces[i] = force;
     }
-
+    if (stream.index == stream.byteLength - 1) { return; }
     for (let i = 0, l = stream.readInt32(); i < l; i++) {
       let upgradeAvailabilityChange = new UpgradeAvailabilityChange();
 

@@ -81,12 +81,12 @@ MemoryFile write_images(std::set<istring> const &names, CompositeLoader &loader,
         (ext == ".mdx" || ext == ".slk" || ext == ".txt" || ext == ".j")) {
       File f = loader.load(fn.c_str());
       if (f) {
-        if (fn.find("DragonSpawnBlue_Portrait") != -1) {
-          Logger::info(" lets debug: %s", fn.c_str());
-        }
         Logger::info("mdxarc.add: %s", fn.c_str());
         mdxarc.add(hash, f, true);
         listFile.printf("%s\n", fn.c_str());
+      }
+      else{
+        Logger::error("[not_found] when mdxarc.add: %s", fn.c_str());
       }
       continue;
     }
@@ -344,11 +344,11 @@ int main() {
     // build = "7c45731c22f6bf4ff30035ab9d905745"; // 1.30.4.11274
     // 1.31.0.12071
     // CdnBuildData data(build);
-
+    Logger::remove();
     std::string root = R"(/work/war3files/)";
     MpqBuildData mpqdat(root);
     mpqdat.write_data(true, true);
-    mpqdat.write_maps();
+    // mpqdat.write_maps();
     // data.write_data(true, true);
 
     // data.write_maps();

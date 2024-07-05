@@ -6,8 +6,8 @@ import { downloadBlob } from 'utils';
 import SlkFile from 'mdx/parsers/slk/file';
 import encoding from 'text-encoding';
 import Title from 'data/title';
-
-import FileSlkView from './FileSlk';
+import { ObjectInspector, TableInspector } from 'react-inspector';
+import FileSlkView from './FileSlk2';
 import FileHexView from './FileHex';
 import FileTextView from './FileText';
 import FileImageView from './FileImage';
@@ -38,13 +38,13 @@ const gameFileTypes = {
   "war3map.wtg": Formats.wtg.File,
   "war3map.wts": Formats.wts.File,
 };
-    
+
 const nodeRenderer = ({ depth, name, data, isNonenumerable, expanded }) => {
   if (depth === 0) {
     if (typeof name === 'string') {
       return (
         <span>
-        <span>{name}</span>
+          <span>{name}</span>
           <span>: </span>
           <ObjectPreviewEx data={data} />
         </span>
@@ -61,8 +61,8 @@ const nodeRenderer = ({ depth, name, data, isNonenumerable, expanded }) => {
 export class FileData extends React.Component {
   constructor(props) {
     super(props);
-    const {id, data} = this.props;
-    const state = {panel: "hex"};
+    const { id, data } = this.props;
+    const state = { panel: "hex" };
     const file = data && data.archive && data.archive.loadBinary(id);
     if (file) {
       this.binary = file.data;
@@ -96,7 +96,7 @@ export class FileData extends React.Component {
         }
       }
       if (this.flags & 6) {
-        const blob = new Blob([this.binary], {type: (this.flags & 4) ? "audio/mpeg" : "audio/wav"});
+        const blob = new Blob([this.binary], { type: (this.flags & 4) ? "audio/mpeg" : "audio/wav" });
         this.audio = URL.createObjectURL(blob);
         state.panel = "audio";
       }
@@ -113,6 +113,7 @@ export class FileData extends React.Component {
           this.data = new gameFileTypes[name](this.binary.buffer);
           state.panel = "data";
         } catch (e) {
+          console.error(name,'Unable to decoding map content. ',e);
         }
       }
     }
@@ -120,24 +121,26 @@ export class FileData extends React.Component {
   }
 
   makePanel(name, title) {
-    return <li key={name} className={classNames("tab-button", {"active": this.state.panel === name})}
-      onClick={() => this.setState({panel: name})}>{title}</li>;
+    return <li key={name} className={classNames("tab-button", { "active": this.state.panel === name })}
+      onClick={() => this.setState({ panel: name })}>{title}</li>;
   }
 
 
   renderPane() {
     const { panel } = this.state;
     switch (panel) {
-    case "hex": return <FileHexView data={this.binary}/>;
-    case "slk": return <FileSlkView data={this.slk}/>;
-    case "text": return <FileTextView lines={this.text} heights={this.textHeights}/>;
-    case "jass": return <FileJassView lines={this.jass}/>;
-    case "audio": return <FileAudioView audio={this.audio}/>;
-    case "model": return <FileModelView id={this.props.id}/>;
-    case "image": return <FileImageView data={this.binary} image={this.image}/>;
-    // case "data": return <ObjectInspector expandLevel={1} data={this.data}/>;
-    case "data": throw Error('missing component')
-    default: return null;
+      case "hex": return <FileHexView data={this.binary} />;
+      case "slk": return <FileSlkView data={this.slk} />;
+      case "text": return <FileTextView lines={this.text} heights={this.textHeights} />;
+      case "jass": return <FileJassView lines={this.jass} />;
+      case "audio": return <FileAudioView audio={this.audio} />;
+      case "model": return <FileModelView id={this.props.id} />;
+      case "image": return <FileImageView data={this.binary} image={this.image} />;
+      case "data":
+        console.log(this.data)
+        return <ObjectInspector expandLevel={1} data={this.data} />;
+      // case "data": throw Error('missing component')
+      default: return null;
     }
   }
 
@@ -172,7 +175,7 @@ export class FileData extends React.Component {
   }
 
   onDownload = () => {
-    const blob = new Blob([this.binary], {type: "application/octet-stream"});
+    const blob = new Blob([this.binary], { type: "application/octet-stream" });
     downloadBlob(blob, this.getName());
   }
 
@@ -183,9 +186,9 @@ export class FileData extends React.Component {
 
     return (
       <div className="FileData">
-        <Title title={this.getName()}/>
+        <Title title={this.getName()} />
         <ul className="tab-line">
-          <li key="dl" className="tab-xbutton" onClick={this.onDownload}>Download <Glyphicon glyph="download-alt"/></li>
+          <li key="dl" className="tab-xbutton" onClick={this.onDownload}>Download <Glyphicon glyph="download-alt" /></li>
           {this.makePanel("hex", "Hex")}
           {this.text != null && this.makePanel("text", "Text")}
           {this.jass != null && this.makePanel("jass", "JASS")}
