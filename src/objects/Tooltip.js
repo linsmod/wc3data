@@ -42,9 +42,8 @@ const TooltipContent = ({ objectId }) => {
 const Tooltip = ({ objectId, children }) => {
   return (
     <OverlayTrigger
-      placement="auto"
       overlay={
-        <Popover>
+        <Popover id='objectId'>
           <TooltipContent objectId={objectId} />
         </Popover>
       }>
