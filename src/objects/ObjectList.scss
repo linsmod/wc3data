@@ -53,6 +53,16 @@ $group-indent: 16px;
       padding-top: 1px;
       line-height: 15px;
     }
+    &.searched .ObjectName {
+      background: rgb(245, 233, 70);
+      color: #3d3d3d;
+      border: 1px dotted #000;
+      margin: -1px;
+      position: relative;
+      top: -1px;
+      padding-top: 1px;
+      line-height: 15px;
+    }
   }
 
 
@@ -137,6 +147,9 @@ $group-indent: 16px;
     }
     &.expanded .toggle {
       &::before { content: '-'; }
+    }
+    &.searched .title{
+      background-color:#f5e946;
     }
   }
 }
