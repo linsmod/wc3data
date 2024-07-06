@@ -1,18 +1,20 @@
-body, html {
+body,
+html {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  overflow-x: scroll;
-  overflow-y: hidden;
-  min-width: 800px;
+  overflow: hidden;
 }
+
 body {
   position: relative;
 }
+
 .navbar {
   margin: 0;
 }
+
 .App {
   position: absolute;
   left: 0;
@@ -21,12 +23,20 @@ body {
   bottom: 0;
   display: flex;
   flex-direction: column;
+  overflow: scroll;
 }
+
+.App>div,
+.App>nav {
+  min-width: 800px;
+}
+
 @media (min-width: 768px) {
   .navbar-header {
-    float:inherit !important;
+    float: inherit !important;
   }
 }
+
 .AppIcon {
   display: inline-block;
   margin-right: 8px;
@@ -34,6 +44,7 @@ body {
   height: 20px;
   position: relative;
   vertical-align: middle;
+
   &::before {
     content: '';
     position: absolute;
@@ -45,23 +56,28 @@ body {
     background-size: 100%;
   }
 }
+
 .app-navbar {
   flex-shrink: 0;
   padding: 0 5px;
   border-radius: 0;
 }
+
 .app-body {
   flex: 1;
   margin: 20px;
+
   &.p-margin p:last-child {
     margin-bottom: 0;
   }
 }
+
 .Spinner {
   position: absolute;
   z-index: 1000;
   left: 50%;
   top: 50%;
+
   &::before {
     content: '';
     color: rgba(0, 0, 0, 0.75);
@@ -81,56 +97,74 @@ body {
     transform: translateZ(0);
   }
 }
+
 @-webkit-keyframes load4 {
+
   0%,
   100% {
     box-shadow: 0 -3em 0 0.2em, 2em -2em 0 0em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 0;
   }
+
   12.5% {
     box-shadow: 0 -3em 0 0, 2em -2em 0 0.2em, 3em 0 0 0, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
   }
+
   25% {
     box-shadow: 0 -3em 0 -0.5em, 2em -2em 0 0, 3em 0 0 0.2em, 2em 2em 0 0, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
   }
+
   37.5% {
     box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 0, 2em 2em 0 0.2em, 0 3em 0 0em, -2em 2em 0 -1em, -3em 0em 0 -1em, -2em -2em 0 -1em;
   }
+
   50% {
     box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 0em, 0 3em 0 0.2em, -2em 2em 0 0, -3em 0em 0 -1em, -2em -2em 0 -1em;
   }
+
   62.5% {
     box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 0, -2em 2em 0 0.2em, -3em 0 0 0, -2em -2em 0 -1em;
   }
+
   75% {
     box-shadow: 0em -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0.2em, -2em -2em 0 0;
   }
+
   87.5% {
     box-shadow: 0em -3em 0 0, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0, -2em -2em 0 0.2em;
   }
 }
+
 @keyframes load4 {
+
   0%,
   100% {
     box-shadow: 0 -3em 0 0.2em, 2em -2em 0 0em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 0;
   }
+
   12.5% {
     box-shadow: 0 -3em 0 0, 2em -2em 0 0.2em, 3em 0 0 0, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
   }
+
   25% {
     box-shadow: 0 -3em 0 -0.5em, 2em -2em 0 0, 3em 0 0 0.2em, 2em 2em 0 0, 0 3em 0 -1em, -2em 2em 0 -1em, -3em 0 0 -1em, -2em -2em 0 -1em;
   }
+
   37.5% {
     box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 0, 2em 2em 0 0.2em, 0 3em 0 0em, -2em 2em 0 -1em, -3em 0em 0 -1em, -2em -2em 0 -1em;
   }
+
   50% {
     box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 0em, 0 3em 0 0.2em, -2em 2em 0 0, -3em 0em 0 -1em, -2em -2em 0 -1em;
   }
+
   62.5% {
     box-shadow: 0 -3em 0 -1em, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 0, -2em 2em 0 0.2em, -3em 0 0 0, -2em -2em 0 -1em;
   }
+
   75% {
     box-shadow: 0em -3em 0 -1em, 2em -2em 0 -1em, 3em 0em 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0.2em, -2em -2em 0 0;
   }
+
   87.5% {
     box-shadow: 0em -3em 0 0, 2em -2em 0 -1em, 3em 0 0 -1em, 2em 2em 0 -1em, 0 3em 0 -1em, -2em 2em 0 0, -3em 0em 0 0, -2em -2em 0 0.2em;
   }
@@ -149,25 +183,31 @@ body {
 
 .MapDialog {
   width: 450px;
+
   .load-progress {
     margin-left: 8px;
     font-size: 16px;
+
     li {
       padding: 1px 0;
     }
+
     li .glyphicon {
       visibility: hidden;
       margin-right: 6px;
     }
+
     li.success .glyphicon {
       visibility: visible;
       color: #4c4;
     }
+
     li.failure .glyphicon {
       visibility: visible;
       color: #f44;
     }
   }
+
   .panel {
     margin: 0;
   }
