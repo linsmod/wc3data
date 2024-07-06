@@ -195,6 +195,19 @@ export default class ModelViewer extends EventEmitter {
       }
     }
   }
+  appendParam = (url, params) => {
+    if (!url.startsWith('blob:')&&params) {
+      for (const key in params) {
+        if (params[key]) {
+          url += (url.indexOf('?') == -1 ? '?' : '&');
+          url += key;
+          url += "=";
+          url += params[key];
+        }
+      }
+    }
+    return url;
+  }
 
   /**
    * Load something. The meat of this whole project.
@@ -242,20 +255,8 @@ export default class ModelViewer extends EventEmitter {
 
         if (serverFetch) {
           let dataType = handlerAndDataType[1];
-          let appendParam = (url, params) => {
-            if (params) {
-              for (const key in params) {
-                if (params[key]) {
-                  url += (url.indexOf('?') == -1 ? '?' : '&');
-                  url += key;
-                  url += "=";
-                  url += params[key];
-                }
-              }
-            }
-            return url;
-          }
-          src = appendParam(src, { src: originalSrc });
+          
+          src = this.appendParam(src, { src: originalSrc });
           fetchDataType(src, dataType)
             .then((response) => {
               let data = response.data;
@@ -335,20 +336,7 @@ export default class ModelViewer extends EventEmitter {
       appyCallback(path);
     }
     else {
-      let appendParam = (url, params) => {
-        if (params) {
-          for (const key in params) {
-            if (params[key]) {
-              url += (url.indexOf('?') == -1 ? '?' : '&');
-              url += key;
-              url += "=";
-              url += params[key];
-            }
-          }
-        }
-        return url;
-      }
-      path = appendParam(path, { dataType: dataType, src: originalPath, });
+      path = this.appendParam(path, { dataType: dataType, src: originalPath, });
       fetchDataType(path, dataType)
         .then((response) => {
           let data = response.data;
