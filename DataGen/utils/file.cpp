@@ -1,5 +1,6 @@
 #include "file.h"
 #include "path.h"
+#include <cstdio>
 #include <set>
 #include <algorithm>
 #include <stdarg.h>

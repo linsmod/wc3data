@@ -417,10 +417,10 @@ void Logger::puts(char const *fmt, ...) {
   }
   instance.logfile->printf("%s", text.c_str());
 }
+extern int remove (const char *__filename);
 void Logger::remove () {
   if (!instance.logfile) {
-    instance.logfile = new File(path::root() / "log.txt", "at");
-    instance.logfile->remove();
+    ::remove((path::root() / "log.txt").c_str());
   }
 }
 #else

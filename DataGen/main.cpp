@@ -348,7 +348,7 @@ int main() {
     std::string root = R"(/work/war3files/)";
     MpqBuildData mpqdat(root);
     mpqdat.write_data(true, true);
-    // mpqdat.write_maps();
+    mpqdat.write_maps();
     // data.write_data(true, true);
 
     // data.write_maps();
