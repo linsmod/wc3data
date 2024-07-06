@@ -242,13 +242,20 @@ export default class ModelViewer extends EventEmitter {
 
         if (serverFetch) {
           let dataType = handlerAndDataType[1];
-          let appendParam = (url)=>{
-            url += (url.indexOf('?') == -1 ? '?' : '&');
-            url += "src=";
-            url += originalSrc;
+          let appendParam = (url, params) => {
+            if (params) {
+              for (const key in params) {
+                if (params[key]) {
+                  url += (url.indexOf('?') == -1 ? '?' : '&');
+                  url += key;
+                  url += "=";
+                  url += params[key];
+                }
+              }
+            }
             return url;
           }
-          src = appendParam(src);
+          src = appendParam(src, { src: originalSrc });
           fetchDataType(src, dataType)
             .then((response) => {
               let data = response.data;
@@ -257,7 +264,7 @@ export default class ModelViewer extends EventEmitter {
                 resource.loadData(data);
               } else {
                 resource.error('FailedToFetch');
-                this.emit('error', resource, response.error, data);
+                // this.emit('error', resource, response.error, data);
               }
             });
         } else {
@@ -311,29 +318,50 @@ export default class ModelViewer extends EventEmitter {
 
     resource.emit('loadstart', resource);
 
-    fetchDataType(path, dataType)
-      .then((response) => {
-        let data = response.data;
+    function appyCallback(data) {
+      if (callback) {
+        data = callback(data);
 
-        if (response.ok) {
-          if (callback) {
-            data = callback(data);
-
-            if (data instanceof Promise) {
-              data.then((data) => resource.loadData(data));
-            } else {
-              resource.loadData(data);
-            }
-          } else {
-            resource.loadData(data);
-          }
+        if (data instanceof Promise) {
+          data.then((data) => resource.loadData(data));
         } else {
-          resource.error('FailedToFetch');
-
-          this.emit('error', resource, response.error, data);
+          resource.loadData(data);
         }
-      });
+      } else {
+        resource.loadData(data);
+      }
+    }
+    if (path instanceof ArrayBuffer) {
+      appyCallback(path);
+    }
+    else {
+      let appendParam = (url, params) => {
+        if (params) {
+          for (const key in params) {
+            if (params[key]) {
+              url += (url.indexOf('?') == -1 ? '?' : '&');
+              url += key;
+              url += "=";
+              url += params[key];
+            }
+          }
+        }
+        return url;
+      }
+      path = appendParam(path, { dataType: dataType, src: originalPath, });
+      fetchDataType(path, dataType)
+        .then((response) => {
+          let data = response.data;
 
+          if (response.ok) {
+            appyCallback(data);
+          } else {
+            resource.error('FailedToFetch');
+
+            // this.emit('error', resource, response.error, data);
+          }
+        });
+    }
     return resource;
   }
 

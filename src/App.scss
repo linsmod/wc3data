@@ -22,10 +22,15 @@ body {
   display: flex;
   flex-direction: column;
 }
+@media (min-width: 768px) {
+  .navbar-header {
+    float:inherit !important;
+  }
+}
 .AppIcon {
   display: inline-block;
   margin-right: 8px;
-  width: 30px;
+  width: 20px;
   height: 20px;
   position: relative;
   vertical-align: middle;
@@ -42,7 +47,7 @@ body {
 }
 .app-navbar {
   flex-shrink: 0;
-  padding: 0 20px;
+  padding: 0 5px;
   border-radius: 0;
 }
 .app-body {

@@ -27,9 +27,12 @@ export default class MapHome extends React.Component {
             <li><b>Suggested Players:</b> <span>{tagString(info.players)}</span></li>
             <li><b>Description:</b> <span>{tagString(info.description)}</span></li>
             <li><b>Author:</b> <span>{tagString(info.author)}</span></li>
+            <li>
+              {image != null && <img src={image} alt="Map preview" />}
+            </li>
           </ul>
         )}
-        {image != null && <img src={image} alt="Map preview"/>}
+
       </div>
     );
   }

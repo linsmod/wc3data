@@ -12,9 +12,22 @@ export default class MappedData {
   constructor(buffer) {
     /** @member {Object<string, Object<string, string>>} */
     this.map = {};
-
+  
+    this.load(buffer);
+    
+  }
+  load(buffer){
     if (buffer) {
-      this.load(buffer);
+
+      if (buffer instanceof ArrayBuffer) {
+        const decoder = new TextDecoder('utf-8');
+        let uint8Array = new Uint8Array(buffer);
+
+        this.loadText(decoder.decode(uint8Array));
+      }
+      else {
+        this.loadText(buffer);
+      }
     }
   }
 
@@ -24,7 +37,7 @@ export default class MappedData {
    *
    * @param {string} buffer
    */
-  load(buffer) {
+  loadText(buffer) {
     if (buffer.startsWith('ID;')) {
       let file = new SlkFile(buffer);
       let rows = file.rows;

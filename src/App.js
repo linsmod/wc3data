@@ -13,15 +13,15 @@ import DataMenu from './DataMenu';
 import DataView from './DataView';
 import HomePage from './HomePage';
 
-const Spinner = () => <div className="Spinner"/>;
+const Spinner = () => <div className="Spinner" />;
 
 const WithData = withAsync({
-  data: ({id}, cache) => cache.data(id)
-}, ({data, children}) => (
+  data: ({ id }, cache) => cache.data(id)
+}, ({ data, children }) => (
   <AppCache.DataContext.Provider value={data}>
     {children}
   </AppCache.DataContext.Provider>
-), undefined, () => <Redirect to="/"/>);
+), undefined, () => <Redirect to="/" />);
 WithData.contextType = AppCache.Context;
 
 function isDropFile(e) {
@@ -61,7 +61,7 @@ class App extends React.PureComponent {
   }
 
   onLoading = loading => {
-    this.setState({loading});
+    this.setState({ loading });
   }
 
   componentDidMount() {
@@ -81,7 +81,7 @@ class App extends React.PureComponent {
   }
 
   setDropping(inc) {
-    this.setState(({dropping}) => ({dropping: Math.max(dropping + inc, 0)}));
+    this.setState(({ dropping }) => ({ dropping: Math.max(dropping + inc, 0) }));
   }
 
   onDrop = e => {
@@ -90,7 +90,7 @@ class App extends React.PureComponent {
       e.preventDefault();
       this.context.loadMap(file);
     }
-    this.setState({dropping: 0});
+    this.setState({ dropping: 0 });
   }
   onDragEnter = e => {
     e.preventDefault();
@@ -110,32 +110,34 @@ class App extends React.PureComponent {
     const build = this.build;
     if (build && !this.context.hasData(build)) {
       notifyMessage(`No data for ${build}`, "warning");
-      return <Redirect to="/"/>;
+      return <Redirect to="/" />;
     }
     return (
       <React.Fragment>
-        {this.state.dropping > 0 && <div className="DropFrame"/>}
+        {this.state.dropping > 0 && <div className="DropFrame" />}
         <Navbar className="app-navbar" fluid>
           <Navbar.Header>
+
             <Navbar.Brand>
-              <Link to="/"><span className="AppIcon"/>WC3 Data</Link>
+
+              <Link to="/"><span className="AppIcon" /> {
+                !build ? <span style={{padding:"5px 10px"}}>WC3 Data</span> : <span></span>
+              }</Link>
             </Navbar.Brand>
-            <Navbar.Toggle style={{float:'inherit'}}/>
+            {!!build &&
+              <WithData id={build}>
+                <DataMenu />
+              </WithData>}
           </Navbar.Header>
-          {!!build && <Navbar.Collapse>
-            <WithData id={build}>
-              <DataMenu/>
-            </WithData>
-          </Navbar.Collapse>}
         </Navbar>
         {build ? (
           <WithData id={build}>
-            <DataView/>
+            <DataView />
           </WithData>
         ) : (
-          <HomePage/>
+          <HomePage />
         )}
-        {this.state.loading > 0 && <Spinner/>}
+        {this.state.loading > 0 && <Spinner />}
       </React.Fragment>
     );
   }
@@ -150,13 +152,13 @@ class MapDialog extends React.Component {
   renderStep(index, name) {
     const { progress, status } = this.props;
     if (progress >= index || (status != null && status !== false)) {
-      return <li className="success"><Glyphicon glyph="ok"/>{name}</li>;
+      return <li className="success"><Glyphicon glyph="ok" />{name}</li>;
     } else if (status != null) {
-      return <li className="failure"><Glyphicon glyph="remove"/>{name}</li>;      
+      return <li className="failure"><Glyphicon glyph="remove" />{name}</li>;
     } else if (progress === index - 1) {
-      return <li className="working"><Glyphicon glyph="ok"/>{name}...</li>;
+      return <li className="working"><Glyphicon glyph="ok" />{name}...</li>;
     } else {
-      return <li className="pending"><Glyphicon glyph="ok"/>{name}</li>;
+      return <li className="pending"><Glyphicon glyph="ok" />{name}</li>;
     }
   }
   render() {
@@ -211,16 +213,16 @@ class Root extends React.Component {
   }
 
   beginMapLoad(name) {
-    this.setState({mapLoadName: name, mapLoadProgress: -1, mapLoadStatus: null, mapLoadError: null});
+    this.setState({ mapLoadName: name, mapLoadProgress: -1, mapLoadStatus: null, mapLoadError: null });
   }
   onMapProgress(stage) {
-    this.setState({mapLoadProgress: stage});
+    this.setState({ mapLoadProgress: stage });
   }
   finishMapLoad(id) {
-    this.setState({mapLoadStatus: id});
+    this.setState({ mapLoadStatus: id });
   }
   failMapLoad(error) {
-    this.setState({mapLoadStatus: false, mapLoadError: error});
+    this.setState({ mapLoadStatus: false, mapLoadError: error });
   }
 
   onCloseMapDialog = () => {
@@ -242,8 +244,8 @@ class Root extends React.Component {
             <AppCache.Context.Provider value={this.cache}>
               <AppCache.MapsContext.Provider value={this.cache.maps}>
                 <div className="App">
-                  <MapDialog name={mapLoadName} status={mapLoadStatus} progress={mapLoadProgress} error={mapLoadError} onHide={this.onCloseMapDialog}/>
-                  <Route path="/:build?" component={AppLoader}/>
+                  <MapDialog name={mapLoadName} status={mapLoadStatus} progress={mapLoadProgress} error={mapLoadError} onHide={this.onCloseMapDialog} />
+                  <Route path="/:build?" component={AppLoader} />
                 </div>
               </AppCache.MapsContext.Provider>
             </AppCache.Context.Provider>

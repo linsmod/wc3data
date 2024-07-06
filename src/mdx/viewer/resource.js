@@ -9,7 +9,7 @@ export default class Resource extends EventEmitter {
   /**
    * @param {Object} resourceData
    */
-  constructor({viewer, handler, extension, pathSolver, fetchUrl = '', path}) {
+  constructor({ viewer, handler, extension, pathSolver, fetchUrl = '', path }) {
     super();
 
     /** @member {ModelViewer.viewer.ModelViewer} */
@@ -93,7 +93,8 @@ export default class Resource extends EventEmitter {
   error(error, reason) {
     this.loaded = true;
 
-    this.emit('error', this, error, reason);
+    console.info('[ResLoad] Failed on ', this.path, this.fetchUrl)
+    // this.emit('error', this, error, reason);
     this.emit('loadend', this);
   }
 

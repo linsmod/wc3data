@@ -1,0 +1,20 @@
+.DataMenu>li {
+  float: left;
+  display: block;
+  padding: 5px 10px;
+  line-height: 40px;
+}
+.DataMenu>li.sep {
+  float: left;
+  display: block;
+  padding: 5px 0px;
+  min-width: 0;
+  line-height: 40px;
+}
+.DataMenu>li.title {
+  background-color: goldenrod;
+  font-family: 'QuadratSerial';
+}
+.DataMenu>li.title a {
+  color: white;
+}
