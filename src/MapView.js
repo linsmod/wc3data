@@ -379,7 +379,7 @@ export default class MapHome extends React.Component {
 
   
   animate = ts => {
-    console.log(ts - this.prevTs);
+    // console.log(ts - this.prevTs);
     this.prevTs = ts;
     this.frame = requestAnimationFrame(this.animate);
     this.scene.camera.viewport([0, 0, this.canvas.width, this.canvas.height]);

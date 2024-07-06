@@ -1,5 +1,5 @@
 import EventEmitter from 'events';
-import {createTextureAtlas} from '../common/canvas';
+import { createTextureAtlas } from '../common/canvas';
 import fetchDataType from '../common/fetchdatatype';
 import WebGL from './gl/gl';
 import PromiseResource from './promiseresource';
@@ -231,7 +231,7 @@ export default class ModelViewer extends EventEmitter {
 
         let handler = handlerAndDataType[0];
 
-        resource = new handler.Constructor({viewer: this, handler, extension, pathSolver, fetchUrl: serverFetch ? src : '', path: originalSrc});
+        resource = new handler.Constructor({ viewer: this, handler, extension, pathSolver, fetchUrl: serverFetch ? src : '', path: originalSrc });
 
         this.resources.push(resource);
         this.resourcesMap.set(src, resource);
@@ -242,7 +242,13 @@ export default class ModelViewer extends EventEmitter {
 
         if (serverFetch) {
           let dataType = handlerAndDataType[1];
-
+          let appendParam = (url)=>{
+            url += (url.indexOf('?') == -1 ? '?' : '&');
+            url += "src=";
+            url += originalSrc;
+            return url;
+          }
+          src = appendParam(src);
           fetchDataType(src, dataType)
             .then((response) => {
               let data = response.data;
@@ -296,7 +302,7 @@ export default class ModelViewer extends EventEmitter {
       return resource;
     }
 
-    resource = new GenericResource({viewer: this, handler: callback, fetchUrl: path, path: originalPath});
+    resource = new GenericResource({ viewer: this, handler: callback, fetchUrl: path, path: originalPath });
 
     this.resources.push(resource);
     this.resourcesMap.set(path, resource);
@@ -384,7 +390,7 @@ export default class ModelViewer extends EventEmitter {
     let textureAtlases = this.textureAtlases;
 
     if (!textureAtlases[name]) {
-      let textureAtlas = {texture: new ImageTexture({viewer: this}), columns: 0, rows: 0};
+      let textureAtlas = { texture: new ImageTexture({ viewer: this }), columns: 0, rows: 0 };
 
       // Promise that there is a future load that the code cannot know about yet, so whenAllLoaded() isn't called prematurely.
       let promise = this.promise();
