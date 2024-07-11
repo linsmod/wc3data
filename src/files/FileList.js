@@ -284,10 +284,9 @@ class FileListInner extends React.PureComponent {
     const search = e.target.value.trim();
     let found = [];
     let hasSearchResult = false;
+    //reset
+    this.root.downSearchVisit(node => node.searched = false);
     if (search != '' && this.files) {
-
-      //reset
-      this.root.downSearchVisit(node => node.searched = false);
       const re = new RegExp(search.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&"), "i");
       this.files.forEach((file, i) => {
         let searched = !!file.path.match(re);
@@ -303,6 +302,10 @@ class FileListInner extends React.PureComponent {
     else {
       this.root.downSearchVisit(node => node.searched = false);
       this.setState({ search: e.target.value, searchResults: null, searched: hasSearchResult });
+    }
+     // console.log('forceUpdateGrid')
+     if (this._list) {
+      this._list.forceUpdateGrid();
     }
     this.stateChanged = true;
   }
@@ -353,7 +356,9 @@ class FileListInner extends React.PureComponent {
       }
     }
     return (
-      <Panel className={classNames(className, "ObjectList")} {...props}>
+      <Panel ref={
+        node=>this._panel=node
+      } className={classNames(className, "ObjectList")} {...props}>
         <div className="search-box">
           <FormControl type="text" value={search} placeholder="Search" onKeyDown={this.onSearchKeyDown} onChange={this.onSearch} />
         </div>

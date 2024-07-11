@@ -183,8 +183,8 @@ class ObjectGroup {
 
   render() {
     let n = 0;
-    this.downVisit(node=>n+=((node.__proto__.constructor.name=='ObjectItem' && node.searched)?1:0));
-    if(n){
+    this.downVisit(node => n += ((node.__proto__.constructor.name == 'ObjectItem' && node.searched) ? 1 : 0));
+    if (n) {
       this.title = `${this._title} (${n}/${this.count})`;
     }
     if (!this.parent) {
@@ -261,12 +261,21 @@ export class ObjectList extends React.PureComponent {
   onSearchKeyDown = (e) => {
     if (e.which === 27) {
       this.setState({ search: "", searchResults: null });
+      if (this._list) {
+        this._list.forceUpdateGrid();
+      }
     }
   }
   onSearch = (e) => {
     const { data, type } = this.props;
     const search = e.target.value.trim();
-    let found = null;
+    console.log(search)
+    let found = 0;
+
+     // reset
+     this.group.downVisit((node) => {
+      node.searched = false;
+    });
     if (search) {
       const re = new RegExp("\\b" + search.replace(/[|\\{}()[\]^$+*?.]/g, "\\$&"), "i");
       const isMatch = obj => {
@@ -275,26 +284,29 @@ export class ObjectList extends React.PureComponent {
         if (obj.name.match(re)) return true;
         if (obj.data.propernames && obj.data.propernames.match(re)) return true;
         if (obj.name.indexOf(search) != -1) {
-          console.log('matching', search, obj)
+          // console.log('matching', search, obj)
           return true;
         }
         return false;
       };
-      // reset
-      this.group.downVisit((node) => {
-        node.searched = false;
-      });
+     
       data.objects.forEach(obj => {
         const matched = isMatch(obj);
         if (matched) {
           obj.upVisit((node) => {
             node.searched = node.searched | matched;
             if (node.searched) {
-              found = true;
+              found++;
+              // console.log('found', found, node);
             }
           })
         }
       });
+
+    }
+    // console.log('forceUpdateGrid')
+    if (this._list) {
+      this._list.forceUpdateGrid();
     }
     this.setState({ search: e.target.value, searchResults: found });
   }
