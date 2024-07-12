@@ -1,8 +1,10 @@
 #include "datafile/game.h"
 #include "image/image.h"
 #include "ngdp/cdnloader.h"
+#include "utils/common.h"
 #include "utils/path.h"
 #include <algorithm>
+#include <exception>
 #include <memory>
 #include <set>
 
@@ -13,9 +15,13 @@
 #include "rmpq/archive.h"
 #include "utils/json.h"
 #include "utils/logger.h"
+#include "utils/types.h"
 
+#include <cstdlib>
 #include <iostream>
-
+#include <regex>
+#include <sstream>
+#include <string>
 // #include <windows.h>
 
 File stringify(json::Value const &js, int indent = 0) {
@@ -77,51 +83,64 @@ MemoryFile write_images(std::set<istring> const &names, CompositeLoader &loader,
       isMod = true;
     }
 
-    if (all &&
-        (ext == ".mdx" || ext == ".slk" || ext == ".txt" || ext == ".j")) {
+    if (all && (ext == ".mdx" || ext == ".slk" || ext == ".txt" ||
+                ext == ".j" || ext == ".fdf" || ext == ".toc")) {
       File f = loader.load(fn.c_str());
       if (f) {
-        Logger::info("mdxarc.add: %s", fn.c_str());
+        // Logger::info("mdxarc.add: %s", fn.c_str());
         mdxarc.add(hash, f, true);
         listFile.printf("%s\n", fn.c_str());
-      }
-      else{
-        Logger::error("[not_found] when mdxarc.add: %s", fn.c_str());
+      } else {
+        Logger::info("write_images.(mdx|slk|txt|j|fdf|toc) skip_missing %s",
+                     fn.c_str());
       }
       continue;
     }
     if (!isImage) {
-      Logger::info(" skip as !image: %s", fn.c_str());
+      // skip put into images if not a image
+      Logger::info("write_images.image skip_none_image %s", fn.c_str());
       continue;
     }
+    // processing images
     if (!all && fn.find("replaceabletextures\\") != 0) {
-      Logger::info(" skip as !replaceabletextures: %s", fn.c_str());
+      // skip if images is replaceabletextures
       continue;
     }
-    // if (fn.find(".dds") == -1) {
-      File f = loader.load(fn.c_str());
-      Image img(f);
-      if (img) {
-        if (fn.find("replaceabletextures\\") == 0) {
-          Logger::info("images.add: %s w=%u, h=%u", fn.c_str(), img.height(),
-                      img.width());
-          images.add(pathHash(fn.c_str()), img);
-        }
-        if (all) {
-          Logger::info("img.write: %s w=%u, h=%u", fn.c_str(), img.height(),
-                      img.width());
-          if (fn.find("WelcomeToBattleNet_Large") != -1) {
-            Logger::info(" lets debug: %s w=%u, h=%u", fn.c_str(), img.height(),
-                        img.width());
-          }
-          File &imgf = imarc[hash % NUM_IMAGE_ARCHIVES].create(hash);
-          img.write(imgf);
-          listFile.printf("%s\n", fn.c_str());
-        }
-      } else {
-        Logger::info("    not a image?: %s", fn.c_str());
+    // load image file to check available
+    File f = loader.load(fn.c_str());
+    int ntry = 1;
+    if (!f) {
+      Logger::info("write_images.image E_loader.load %s", fn.c_str());
+      f = loader.load(canonPath.c_str());
+      if (!f) {
+        continue;
       }
-    // }
+      ntry = 2;
+    }
+    if (ntry == 2) {
+      Logger::info("write_images.image canonPath ok for %s", fn.c_str());
+    }
+    Image img(f);
+    if (!img) {
+      Logger::info("write_images.image E_decode_img %s", fn.c_str());
+      continue;
+    }
+
+    // collect hash
+    if (fn.find("replaceabletextures\\") == 0) {
+
+      // todo: Why not using local varialbe hash?
+      // 是否说明如果图片路径中包含replaceabletextures，那么hash的内容是路径及其扩展名
+      // 否则hash内容只有路径没有扩展名？
+      images.add(pathHash(fn.c_str()), img);
+    }
+
+    // write into archive collect name
+    if (all) {
+      File &imgf = imarc[hash % NUM_IMAGE_ARCHIVES].create(hash);
+      img.write(imgf);
+      listFile.printf("%s\n", fn.c_str());
+    }
   }
   if (all) {
     for (size_t i = 0; i < NUM_IMAGE_ARCHIVES; ++i) {
@@ -151,6 +170,8 @@ MemoryFile write_meta(std::set<istring> const &names, CompositeLoader &loader,
     if ((dir == "ui" || dir == "units" || dir == "doodads") &&
         (ext == ".txt" || ext == ".slk")) {
       toLoad.insert(fn);
+    } else {
+      Logger::info("write_meta listfile::skip %s", fn.c_str());
     }
   }
   toLoad.insert("Scripts\\common.j");
@@ -162,7 +183,7 @@ MemoryFile write_meta(std::set<istring> const &names, CompositeLoader &loader,
     }
   }
 
-  File listFile(path::root() / "listfile.txt");
+  File listFile(path::appbase() / "listfile.txt");
   if (listFile) {
     metaArc.add("listfile.txt", listFile, true);
   }
@@ -229,10 +250,15 @@ struct BuildData {
     json::parse(File(path::root() / "versions.json"), versions);
     json::Value &mlist = versions["custom"];
     std::vector<std::string> mapnames;
+    std::vector<std::string> mpqnames;
     for (auto fn : names) {
       istring ext = path::ext(fn);
       if (ext == ".w3x" || ext == ".w3m") {
         mapnames.push_back(fn);
+      } else if (ext == ".mpq") {
+        File mpqf = loader.load(fn.c_str());
+        auto arc = std::make_shared<mpq::Archive>(mpqf);
+        loader.add(arc);
       }
     }
     for (auto fn : Logger::loop(mapnames)) {
@@ -312,43 +338,184 @@ struct CdnBuildData : public BuildData {
 };
 
 struct MpqBuildData : public BuildData {
-  MpqBuildData(std::string const &root) {
-    for (auto ar :
-         {"war3patch.mpq", "War3Patch.mpq", "war3xLocal.mpq", "War3xLocal.mpq",
-          "war3x.mpq", "War3x.mpq", "war3.mpq", "War3.mpq"}) {
-      File file(root / ar);
-      if (file) {
-        auto arc = std::make_shared<mpq::Archive>(file);
-        loader.add(arc);
+  bool mpqFound = false;
+  std::string extension = ".mpq"; // 如果您只想查找MPQ文件
+  MpqBuildData(std::string const &root, uint32 build, std::string version) {
+
+    for (const auto &entry : fs::directory_iterator(root)) {
+      if (fs::is_regular_file(entry.status()) &&
+          entry.path().string().find("Deprecated.mpq") == -1) {
+        if (entry.path().extension() == this->extension) {
+          File file(entry.path());
+          auto arc = std::make_shared<mpq::Archive>(file);
+          loader.add(arc);
+          this->mpqFound = true;
+          Logger::debug("mpq found: %s", entry.path().c_str());
+        }
       }
     }
 
-    File listf(path::root() / "../../listfile.txt", "rb");
+    // for (auto ar :
+    //      {"war3patch.mpq", "War3Patch.mpq", "war3xLocal.mpq",
+    //      "War3xLocal.mpq",
+    //       "war3x.mpq", "War3x.mpq", "war3.mpq", "War3.mpq"}) {
+    //   File file(root / ar);
+    //   if (file) {
+    //     auto arc = std::make_shared<mpq::Archive>(file);
+    //     loader.add(arc);
+    //     this->mpqFound = true;
+    //   }
+    // }
+    if (!this->mpqFound) {
+      return;
+    }
+
+    File listf(path::appbase() / "listfile.txt", "rb");
     std::string line;
+    if (!File::exists(path::appbase() / "listfile.txt")) {
+      throw new Exception(
+          "E: listfile.txt is with this app but does not exists.");
+    }
     while (listf.getline(line)) {
       names.insert(trim(line));
     }
-
-    info.build = 7085;
-    info.version = "1.27.1.7085";
+    info.build = build;
+    info.version = version;
+    // info.build = 7085;
+    // info.version = "1.27.1.7085";
   }
 };
 
-int main() {
+namespace fs = std::filesystem;
+const std::string DEFAULT_OUTPUT_DIR = "./workout"; // 默认输出目录
+int main(int argc, char *argv[]) {
+  std::string mpqPath;
+  std::string versionStr;
+  std::string outputPath = DEFAULT_OUTPUT_DIR; // 初始化为默认值
+  bool processMaps = false;
+  uint32 build = 0;
+  // 检查参数数量至少为2（程序名+Warcraft III安装路径）
+  if (argc < 2) {
+    std::cerr << "Usage: " << argv[0]
+              << " <path/to/warcraft3/installation> [-b <build>] "
+                 "[-m] [-o <path/to/output/wc3data>]"
+              << std::endl;
+    std::cerr << "  -m Enable processing all maps under "
+                 "<path/to/warcraft3/installation>, default is disabled."
+              << std::endl;
+    std::cerr << "  -b Build version of Warcraft3 installation, will "
+                 "displaying in webApp menu list."
+              << std::endl;
+    std::cerr << "  -o Optional output path relative to the folder that "
+                 "contains this program or absolute path."
+              << std::endl;
+    std::cerr << "  Example: " << argv[0]
+              << " \"/data/WarCraft III/\" -b 1.27.1.7085 -o ./workout"
+              << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  mpqPath = argv[1]; // 第一个参数是Warcraft III安装路径
+
+  // 遍历剩余参数
+  for (int i = 2; i < argc; i++) {
+    if (argv[i] == std::string("-b")) {
+      // 确保后面有跟随的构建信息
+      if (i + 1 >= argc) {
+        std::cerr << "Error: Missing build info after '-b' flag." << std::endl;
+        return EXIT_FAILURE;
+      }
+      versionStr = argv[++i]; // 获取并存储构建信息
+    } else if (argv[i] == std::string("-o")) {
+      // 确保后面有跟随的输出目录路径
+      if (i + 1 >= argc) {
+        std::cerr << "Error: Output directory path missing after '-o' flag."
+                  << std::endl;
+        return EXIT_FAILURE;
+      }
+      outputPath = argv[++i]; // 使用提供的输出目录路径
+    } else if (argv[i] == std::string("-m")) {
+      processMaps = true;
+    } else {
+      std::cerr << "Warning: Unrecognized argument '" << argv[i]
+                << "'. Ignoring." << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+  // 校验outputPath
   try {
-    auto build = CdnLoader::ngdp().version().build;
-    // build = "38f31eb67143d03da05854bfb559ed42"; // 1.30.1.10211
+    if (!fs::exists(outputPath)) {
+      fs::create_directories(outputPath);
+      std::cout << "Created output directory: " << outputPath << std::endl;
+    } else if (!fs::is_directory(outputPath)) {
+      std::cerr << "Error: '" << outputPath << "' is not a directory."
+                << std::endl;
+      return EXIT_FAILURE;
+    }
+  } catch (const fs::filesystem_error &e) {
+    std::cerr << "Error accessing or creating output directory: " << e.what()
+              << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  std::cout << "War3 files location: " << mpqPath << std::endl;
+
+  if (!versionStr.empty()) {
+    // 使用正则表达式找到最后一个数字序列
+    std::regex digitRegex("(\\d+)$");
+    std::smatch match;
+    if (std::regex_search(versionStr, match, digitRegex)) {
+      std::string buildStr = match[0];
+      try {
+        int build = std::stoi(buildStr); // 将找到的数字部分转换为整数
+        // std::cout << "Build Number: " << build << std::endl;
+        // std::cout << "Version: " << versionStr << std::endl;
+      } catch (const std::invalid_argument &ia) {
+        std::cerr
+            << "E: argv: Invalid build param. format must like 1.27.1.7085"
+            << std::endl;
+        return EXIT_FAILURE;
+      } catch (const std::out_of_range &oor) {
+        std::cerr
+            << "E: argv: Invalid build param. format must like 1.27.1.7085"
+            << std::endl;
+        return EXIT_FAILURE;
+      }
+    } else {
+      std::cerr << "E: argv: Invalid build param. format must like 1.27.1.7085"
+                << std::endl;
+      return EXIT_FAILURE;
+    }
+  } else {
+    std::cerr << "E: argv: Missing build param." << std::endl;
+    return main(1, argv);
+    return EXIT_FAILURE;
+  }
+
+  std::cout << "Program output path: " << outputPath << std::endl;
+  try {
+    // auto build = CdnLoader::ngdp().version().build;
+    // build = "38f31eb67143d03da05854bffb559ed42"; // 1.30.1.10211
     // build = "34872da6a3842639ff2d2a86ee9b3755"; // 1.30.2.11024
     // build = "e4473116a14ec84d2e00c46af4c3f42f"; // 1.30.2.11029
     // build = "8741363b75f97365ff584fda9d4b804f"; // 1.30.2.11065
     // build = "7c45731c22f6bf4ff30035ab9d905745"; // 1.30.4.11274
     // 1.31.0.12071
     // CdnBuildData data(build);
+    path::root(outputPath);
     Logger::remove();
-    std::string root = R"(/work/war3files/)";
-    MpqBuildData mpqdat(root);
+    MpqBuildData mpqdat(mpqPath, build, versionStr);
+    if (!mpqdat.mpqFound) {
+      std::cout << fmtstring("E: No mpq files found in path `%s, please check.",
+                             mpqPath.c_str())
+                       .c_str()
+                << std::endl;
+      main(1, argv);
+      return 0;
+    }
     mpqdat.write_data(true, true);
-    mpqdat.write_maps();
+    if (processMaps)
+      mpqdat.write_maps();
     // data.write_data(true, true);
 
     // data.write_maps();
@@ -361,8 +528,8 @@ int main() {
     //  uint32 t0 = GetTickCount();
     //  parser.onProgress = [&](unsigned int stage) {
     //    uint32 t1 = GetTickCount();
-    //    Logger::info("Stage %u - %.3f ms\n", stage, float(t1 - t0) / 1000.0f);
-    //    t0 = t1;
+    //    Logger::info("Stage %u - %.3f ms\n", stage, float(t1 - t0) /
+    //    1000.0f); t0 = t1;
     //  };
     //
     //  auto pf = parser.processAll();

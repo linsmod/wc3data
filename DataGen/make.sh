@@ -31,7 +31,7 @@ call() {
 
 export link_flags="-lcurl -lncurses"
 export cc_flags="-O0 -DZ_SOLO -DNOLOGGER -I. -g -c" # 注意移除了链接库标志
-export cpp_flags="--std=c++17 $cc_flags"            # 同样移除了链接库标志
+export cpp_flags="--std=c++17 $cc_flags"                 # 同样移除了链接库标志
 mkobj() {
     #### libutils
     call $clang_cpp utils/checksum.cpp -o $out/checksum.o $cpp_flags &&
@@ -150,8 +150,20 @@ mkobj() {
 
 ## app
 mkapp() {
+    echo ""
     echo $clang_cpp $(<"$out/obj.txt") -o $out/main $link_flags
-    $clang_cpp $(<"$out/obj.txt") -o $out/main $link_flags &&
-        $out/main
+    echo ""
+    echo "Linking program:" $out/main
+    $clang_cpp $(<"$out/obj.txt") -o $out/main $link_flags
+    echo ""
+    echo "Starting program without passing arguments:"
+    echo ""
+    $out/main
 }
+gendata(){
+    $out/main "/wp4/WarCraft III/" -b 1.27.1.7085
+}
+mkall(){
 mkobj && mkapp
+}
+mkall

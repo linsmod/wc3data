@@ -1,16 +1,16 @@
-#include <memory>
-#include <algorithm>
-#include <set>
-#include <inttypes.h>
 #include "datafile/game.h"
+#include <algorithm>
+#include <inttypes.h>
+#include <memory>
+#include <set>
 //#include "image/image.h"
 
-#include "utils/json.h"
+#include "hash.h"
 #include "rmpq/archive.h"
 #include "rmpq/common.h"
-#include "utils/path.h"
-#include "hash.h"
 #include "search.h"
+#include "utils/json.h"
+#include "utils/path.h"
 
 #include "parse.h"
 
@@ -18,12 +18,15 @@
 #include "utils/logger.h"
 #endif
 
-std::string transStr(std::string str, WEStrings& wes) {
-  if (!wes.get(str)) return str;
+std::string transStr(std::string str, WEStrings &wes) {
+  if (!wes.get(str))
+    return str;
   while (true) {
     auto val = wes.get(str);
-    if (val) str = val;
-    else break;
+    if (val)
+      str = val;
+    else
+      break;
   }
   if (str.size() && str[0] == '"') {
     size_t next = str.find('"', 1);
@@ -36,9 +39,9 @@ std::string transStr(std::string str, WEStrings& wes) {
   return str;
 }
 
-std::string transStr(std::string str, WTSData& wts) {
+std::string transStr(std::string str, WTSData &wts) {
   if (!strncmp(str.c_str(), "TRIGSTR_", 8)) {
-    char const* rep = wts.get(atoi(str.c_str() + 8));
+    char const *rep = wts.get(atoi(str.c_str() + 8));
     if (rep) {
       str = rep;
     }
@@ -46,31 +49,39 @@ std::string transStr(std::string str, WTSData& wts) {
   return str;
 }
 
-std::string fixStr(std::string str, WEStrings& wes) {
+std::string fixStr(std::string str, WEStrings &wes) {
   str = transStr(str, wes);
   std::string sv;
   for (auto c : str) {
-    if (c != '&') sv.push_back(c);
+    if (c != '&')
+      sv.push_back(c);
   }
   return sv;
 }
 
-void parseMeta(json::Visitor& out, MetaData* meta, GameData::Type type, WEStrings& wes) {
+void parseMeta(json::Visitor &out, MetaData *meta, GameData::Type type,
+               WEStrings &wes) {
   out.onOpenArray();
   for (size_t row = 0; row < meta->rows(); ++row) {
     int flags = 0;
     if (type == GameData::UNITS) {
-      if (meta->getInt(row, MetaData::USEUNIT)) flags |= 1;
-      if (meta->getInt(row, MetaData::USEHERO)) flags |= 2;
-      if (meta->getInt(row, MetaData::USEBUILDING)) flags |= 4;
-      if (meta->getInt(row, MetaData::USEITEM)) flags |= 8;
+      if (meta->getInt(row, MetaData::USEUNIT))
+        flags |= 1;
+      if (meta->getInt(row, MetaData::USEHERO))
+        flags |= 2;
+      if (meta->getInt(row, MetaData::USEBUILDING))
+        flags |= 4;
+      if (meta->getInt(row, MetaData::USEITEM))
+        flags |= 8;
     }
 
     out.onOpenMap();
     out.keyString("field", meta->getString(row, MetaData::FIELD));
     out.keyInteger("index", meta->getInt(row, MetaData::INDEX));
-    if (meta->getInt(row, MetaData::REPEAT)) flags |= 16;
-    if (meta->getInt(row, MetaData::APPENDINDEX)) flags |= 32;
+    if (meta->getInt(row, MetaData::REPEAT))
+      flags |= 16;
+    if (meta->getInt(row, MetaData::APPENDINDEX))
+      flags |= 32;
     out.keyInteger("data", meta->getInt(row, MetaData::DATA));
     out.keyInteger("flags", flags);
     out.keyString("specific", meta->getString(row, MetaData::USESPECIFIC));
@@ -90,7 +101,7 @@ void parseMeta(json::Visitor& out, MetaData* meta, GameData::Type type, WEString
 json::Value parseINI(File file) {
   std::string line;
   json::Value out;
-  json::Value* cur = nullptr;
+  json::Value *cur = nullptr;
   while (file.getline(line)) {
     line = trim(line);
     if (line.size() > 0 && line[0] == '[') {
@@ -109,10 +120,10 @@ json::Value parseINI(File file) {
   return out;
 }
 
-json::Value parseTypes(File file, WEStrings& wes) {
+json::Value parseTypes(File file, WEStrings &wes) {
   std::string line;
   json::Value out;
-  json::Value* cur = nullptr;
+  json::Value *cur = nullptr;
   std::map<int, std::string> values;
   while (file.getline(line)) {
     line = trim(line);
@@ -125,12 +136,13 @@ json::Value parseTypes(File file, WEStrings& wes) {
       }
     } else if (cur && line.size() > 0 && line[0] != '/') {
       auto p = split(line, '=');
-      if (p.size() == 2 && (p[0].size() == 2 || p[0].size() == 6) && isdigit((unsigned char) p[0][0]) && isdigit((unsigned char) p[0][1])) {
+      if (p.size() == 2 && (p[0].size() == 2 || p[0].size() == 6) &&
+          isdigit((unsigned char)p[0][0]) && isdigit((unsigned char)p[0][1])) {
         int key = atoi(p[0].c_str());
         if (p[0].size() == 6) {
           if (p[0].substr(2) == "_Alt") {
             p = split(p[1], ',');
-            for (auto& k : p) {
+            for (auto &k : p) {
               (*cur)[k] = values[key];
             }
           }
@@ -148,7 +160,7 @@ json::Value parseTypes(File file, WEStrings& wes) {
   return out;
 }
 
-#pragma pack (push, 1)
+#pragma pack(push, 1)
 struct TGAHeader {
   uint8 idLength;
   uint8 colormapType;
@@ -163,7 +175,7 @@ struct TGAHeader {
   uint8 pixelSize;
   uint8 imageDesc;
 };
-#pragma pack (pop)
+#pragma pack(pop)
 
 std::string readString(File file) {
   std::string result;
@@ -195,79 +207,79 @@ MapParser::MapParser(File data, File map) {
 
 bool MapParser::hasCustomObjects() {
   static std::string customFiles[] = {
-    "war3map.w3u",
-    "war3map.w3t",
-    "war3map.w3b",
-    "war3map.w3d",
-    "war3map.w3a",
-    "war3map.w3h",
-    "war3map.w3q",
-    "Doodads\\Doodads.slk",
-    "Doodads\\DoodadMetaData.slk",
-    "UI\\WorldEditGameStrings.txt",
-    "UI\\WorldEditStrings.txt",
-    "Units\\AbilityBuffData.slk",
-    "Units\\AbilityBuffMetaData.slk",
-    "Units\\AbilityData.slk",
-    "Units\\AbilityMetaData.slk",
-    "Units\\CampaignAbilityFunc.txt",
-    "Units\\CampaignAbilityStrings.txt",
-    "Units\\CampaignUnitFunc.txt",
-    "Units\\CampaignUnitStrings.txt",
-    "Units\\CampaignUpgradeFunc.txt",
-    "Units\\CampaignUpgradeStrings.txt",
-    "Units\\CommonAbilityFunc.txt",
-    "Units\\CommonAbilityStrings.txt",
-    "Units\\DestructableData.slk",
-    "Units\\DestructableMetaData.slk",
-    "Units\\HumanAbilityFunc.txt",
-    "Units\\HumanAbilityStrings.txt",
-    "Units\\HumanUnitFunc.txt",
-    "Units\\HumanUnitStrings.txt",
-    "Units\\HumanUpgradeFunc.txt",
-    "Units\\HumanUpgradeStrings.txt",
-    "Units\\ItemAbilityFunc.txt",
-    "Units\\ItemAbilityStrings.txt",
-    "Units\\ItemData.slk",
-    "Units\\ItemFunc.txt",
-    "Units\\ItemStrings.txt",
-    "Units\\NeutralAbilityFunc.txt",
-    "Units\\NeutralAbilityStrings.txt",
-    "Units\\NeutralUnitStrings.txt",
-    "Units\\NeutralUnitFunc.txt",
-    "Units\\NeutralUpgradeFunc.txt",
-    "Units\\NeutralUpgradeStrings.txt",
-    "Units\\NightElfAbilityFunc.txt",
-    "Units\\NightElfAbilityStrings.txt",
-    "Units\\NightElfUnitStrings.txt",
-    "Units\\NightElfUnitFunc.txt",
-    "Units\\NightElfUpgradeFunc.txt",
-    "Units\\NightElfUpgradeStrings.txt",
-    "Units\\OrcAbilityFunc.txt",
-    "Units\\OrcAbilityStrings.txt",
-    "Units\\OrcUnitFunc.txt",
-    "Units\\OrcUnitStrings.txt",
-    "Units\\OrcUpgradeFunc.txt",
-    "Units\\OrcUpgradeStrings.txt",
-    "Units\\UndeadAbilityFunc.txt",
-    "Units\\UndeadAbilityStrings.txt",
-    "Units\\UndeadUnitFunc.txt",
-    "Units\\UndeadUnitStrings.txt",
-    "Units\\UndeadUpgradeFunc.txt",
-    "Units\\UndeadUpgradeStrings.txt",
-    "Units\\UnitAbilities.slk",
-    "Units\\UnitBalance.slk",
-    "Units\\UnitData.slk",
-    "Units\\UnitMetaData.slk",
-    "Units\\unitUI.slk",
-    "Units\\UnitWeapons.slk",
-    "Units\\UpgradeData.slk",
-    "Units\\UpgradeMetaData.slk",
+      "war3map.w3u",
+      "war3map.w3t",
+      "war3map.w3b",
+      "war3map.w3d",
+      "war3map.w3a",
+      "war3map.w3h",
+      "war3map.w3q",
+      "Doodads\\Doodads.slk",
+      "Doodads\\DoodadMetaData.slk",
+      "UI\\WorldEditGameStrings.txt",
+      "UI\\WorldEditStrings.txt",
+      "Units\\AbilityBuffData.slk",
+      "Units\\AbilityBuffMetaData.slk",
+      "Units\\AbilityData.slk",
+      "Units\\AbilityMetaData.slk",
+      "Units\\CampaignAbilityFunc.txt",
+      "Units\\CampaignAbilityStrings.txt",
+      "Units\\CampaignUnitFunc.txt",
+      "Units\\CampaignUnitStrings.txt",
+      "Units\\CampaignUpgradeFunc.txt",
+      "Units\\CampaignUpgradeStrings.txt",
+      "Units\\CommonAbilityFunc.txt",
+      "Units\\CommonAbilityStrings.txt",
+      "Units\\DestructableData.slk",
+      "Units\\DestructableMetaData.slk",
+      "Units\\HumanAbilityFunc.txt",
+      "Units\\HumanAbilityStrings.txt",
+      "Units\\HumanUnitFunc.txt",
+      "Units\\HumanUnitStrings.txt",
+      "Units\\HumanUpgradeFunc.txt",
+      "Units\\HumanUpgradeStrings.txt",
+      "Units\\ItemAbilityFunc.txt",
+      "Units\\ItemAbilityStrings.txt",
+      "Units\\ItemData.slk",
+      "Units\\ItemFunc.txt",
+      "Units\\ItemStrings.txt",
+      "Units\\NeutralAbilityFunc.txt",
+      "Units\\NeutralAbilityStrings.txt",
+      "Units\\NeutralUnitStrings.txt",
+      "Units\\NeutralUnitFunc.txt",
+      "Units\\NeutralUpgradeFunc.txt",
+      "Units\\NeutralUpgradeStrings.txt",
+      "Units\\NightElfAbilityFunc.txt",
+      "Units\\NightElfAbilityStrings.txt",
+      "Units\\NightElfUnitStrings.txt",
+      "Units\\NightElfUnitFunc.txt",
+      "Units\\NightElfUpgradeFunc.txt",
+      "Units\\NightElfUpgradeStrings.txt",
+      "Units\\OrcAbilityFunc.txt",
+      "Units\\OrcAbilityStrings.txt",
+      "Units\\OrcUnitFunc.txt",
+      "Units\\OrcUnitStrings.txt",
+      "Units\\OrcUpgradeFunc.txt",
+      "Units\\OrcUpgradeStrings.txt",
+      "Units\\UndeadAbilityFunc.txt",
+      "Units\\UndeadAbilityStrings.txt",
+      "Units\\UndeadUnitFunc.txt",
+      "Units\\UndeadUnitStrings.txt",
+      "Units\\UndeadUpgradeFunc.txt",
+      "Units\\UndeadUpgradeStrings.txt",
+      "Units\\UnitAbilities.slk",
+      "Units\\UnitBalance.slk",
+      "Units\\UnitData.slk",
+      "Units\\UnitMetaData.slk",
+      "Units\\unitUI.slk",
+      "Units\\UnitWeapons.slk",
+      "Units\\UpgradeData.slk",
+      "Units\\UpgradeMetaData.slk",
   };
   if (!mapArchive) {
     return false;
   }
-  for (const auto& fn : customFiles) {
+  for (const auto &fn : customFiles) {
     if (mapArchive->fileExists(fn.c_str())) {
       return true;
     }
@@ -276,20 +288,23 @@ bool MapParser::hasCustomObjects() {
 }
 
 MemoryFile MapParser::processObjects() {
-  std::string typeNames[] = { "unit", "item", "destructible", "doodad", "ability", "buff", "upgrade" };
+  std::string typeNames[] = {"unit",    "item", "destructible", "doodad",
+                             "ability", "buff", "upgrade"};
 
   data.load(loader, GameData::LOAD_ALL | GameData::LOAD_KEEP_METADATA);
-  if (onProgress) onProgress(PROGRESS_LOAD_OBJECTS);
+  if (onProgress)
+    onProgress(PROGRESS_LOAD_OBJECTS);
 
 #ifndef NO_SYSTEM
   for (int type = 0; type < GameData::NUM_TYPES; ++type) {
-   Logger::info("Data %-10s count=%-8u size=%-8u", typeNames[type].c_str(), data.data[type]->numUnits(), data.data[type]->dataSize());
+    Logger::info("Data %-10s count=%-8u size=%-8u", typeNames[type].c_str(),
+                 data.data[type]->numUnits(), data.data[type]->dataSize());
   }
 #endif
 
   MemoryFile outFile;
   json::WriterVisitor out(outFile);
-  //out.setIndent(2);
+  // out.setIndent(2);
 
   std::set<uint32> icons;
   if (File iconFile = dataFiles->load("images.dat")) {
@@ -306,7 +321,7 @@ MemoryFile MapParser::processObjects() {
   out.onMapKey("objects");
   out.onOpenArray();
 
-  auto fileExists = [&](char const* name) {
+  auto fileExists = [&](char const *name) {
     if (mapArchive && mapArchive->fileExists(name)) {
       return true;
     }
@@ -320,7 +335,7 @@ MemoryFile MapParser::processObjects() {
     }
 
     for (size_t i = 0; i < data.data[type]->numUnits(); ++i) {
-      UnitData* unit = data.data[type]->unit(i);
+      UnitData *unit = data.data[type]->unit(i);
 
       if (!unit->id()) {
         continue;
@@ -337,7 +352,7 @@ MemoryFile MapParser::processObjects() {
       if (arti && unit->hasData(arti)) {
         art = unit->getStringData(arti, 0);
       } else if (type == GameData::DESTRUCTABLES) {
-        auto& cats = wed["DestructibleCategories"];
+        auto &cats = wed["DestructibleCategories"];
         auto cat = unit->getData("category");
         if (cats.has(cat)) {
           auto p = split(cats[cat].getString(), ',');
@@ -346,7 +361,7 @@ MemoryFile MapParser::processObjects() {
           }
         }
       } else if (type == GameData::DOODADS) {
-        auto& cats = wed["DoodadCategories"];
+        auto &cats = wed["DoodadCategories"];
         auto cat = unit->getData("category");
         if (cats.has(cat)) {
           auto p = split(cats[cat].getString(), ',');
@@ -371,9 +386,12 @@ MemoryFile MapParser::processObjects() {
 
       std::string uname = unit->getStringData("EditorName", 0);
       if (uname.empty() || uname == "_") {
-        if (unit->hasData("Name")) uname = unit->getStringData("Name", 0);
-        else if (unit->hasData("Bufftip")) uname = unit->getStringData("Bufftip", 0);
-        else uname = "Chaos";
+        if (unit->hasData("Name"))
+          uname = unit->getStringData("Name", 0);
+        else if (unit->hasData("Bufftip"))
+          uname = unit->getStringData("Bufftip", 0);
+        else
+          uname = "Chaos";
       }
       uname = fixStr(uname, data.wes);
       if (unit->hasData("EditorSuffix")) {
@@ -392,7 +410,8 @@ MemoryFile MapParser::processObjects() {
       out.onOpenMap();
       for (size_t j = 0; j < data.data[type]->numColumns(); j++) {
         if (unit->hasData(j)) {
-          out.keyString(data.data[type]->columnName(j), transStr(unit->getData(j), data.wes));
+          out.keyString(data.data[type]->columnName(j),
+                        transStr(unit->getData(j), data.wes));
         }
       }
       out.onCloseMap();
@@ -421,7 +440,7 @@ MemoryFile MapParser::processObjects() {
     auto cat = wed["ObjectEditorCategories"];
     out.onMapKey("categories");
     out.onOpenMap();
-    for (auto& kv : cat.getMap()) {
+    for (auto &kv : cat.getMap()) {
       out.keyString(kv.first, fixStr(kv.second.getString(), data.wes));
     }
     out.onCloseMap();
@@ -430,7 +449,8 @@ MemoryFile MapParser::processObjects() {
   out.onCloseMap();
   out.onEnd();
 
-  if (onProgress) onProgress(PROGRESS_WRITE_OBJECTS);
+  if (onProgress)
+    onProgress(PROGRESS_WRITE_OBJECTS);
 
   return outFile;
 }
@@ -448,9 +468,10 @@ MemoryFile MapParser::processAll() {
   StringLib names;
   for (int type = 0; type < GameData::NUM_TYPES; ++type) {
     int col = data.data[type]->columnIndex("name");
-    if (col < 0) continue;
+    if (col < 0)
+      continue;
     for (size_t i = 0; i < data.data[type]->numUnits(); ++i) {
-      UnitData* unit = data.data[type]->unit(i);
+      UnitData *unit = data.data[type]->unit(i);
       if (unit->hasData(col)) {
         names.add(unit->id(), unit->getStringData(col, 0));
       }
@@ -482,23 +503,24 @@ MemoryFile MapParser::processAll() {
     FileSearch search(*mapArchive);
     search.search();
 
-    if (onProgress) onProgress(PROGRESS_IDENTIFY_FILES);
+    if (onProgress)
+      onProgress(PROGRESS_IDENTIFY_FILES);
 
     auto listFile = outArc.create("listfile.txt", true);
 
     size_t count = mapArchive->getMaxFiles();
     uint32 numFound = 0, numMissing = 0, numFailed = 0;
     for (size_t i = 0; i < count; ++i) {
-      char const* name = mapArchive->getFileName(i);
+      char const *name = mapArchive->getFileName(i);
       File file = mapArchive->load(i);
       if (file) {
-        auto& he = mapArchive->hashEntry(i);
+        auto &he = mapArchive->hashEntry(i);
         outArc.add(mpq::hashTo64(he.name1, he.name2), file, true);
         if (name) {
           listFile.printf("%s\n", name);
           ++numFound;
         } else if (mapArchive->fileExists(i)) {
-          char const* ext = "";
+          char const *ext = "";
           if (file.size() >= 4) {
             file.seek(0);
             uint32 id = file.read32(true);
@@ -506,6 +528,10 @@ MemoryFile MapParser::processAll() {
               ext = ".blp";
             } else if (id == 'MDLX') {
               ext = ".mdx";
+            } else {
+              // unsigned char *bytes = (unsigned char *)&id;
+              // Logger::info("%02x%02x%02x%02x", bytes[0], bytes[1], bytes[2],
+              //              bytes[3]);
             }
           }
           listFile.printf("Unknown\\%08X%08X%s\n", he.name2, he.name1, ext);
@@ -515,7 +541,8 @@ MemoryFile MapParser::processAll() {
         ++numFailed;
       }
     }
-    if (onProgress) onProgress(PROGRESS_COPY_FILES);
+    if (onProgress)
+      onProgress(PROGRESS_COPY_FILES);
   }
 
   MemoryFile finalFile;

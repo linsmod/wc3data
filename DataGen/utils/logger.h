@@ -1,10 +1,10 @@
 #pragma once
 
 #include "file.h"
+#include <list>
 #include <string>
 #include <vector>
-#include <list>
-enum class LogLevel { DEBUG, INFO, WARN, ERROR };
+enum class LogLevel { DEBUG, INFO, WARN, ERROR, ALL };
 class Logger {
 public:
   struct Task;
@@ -19,6 +19,7 @@ private:
   static Task *top;
   LogLevel currentLogLevel;
   int pad_left;
+
 public:
   static void *begin(size_t count, char const *name = nullptr,
                      void *task = nullptr);
@@ -29,15 +30,13 @@ public:
   static int menu(char const *title, std::vector<std::string> const &options);
   static int menu(char const *title,
                   std::map<char, std::string> const &options);
-  static void log(LogLevel level, char const* fmt, ...);
-  static void debug(char const* fmt, ...);
-  static void info(char const* fmt, ...);
-  static void warn(char const* fmt, ...);
-  static void error(char const* fmt, ...);
+  static void log(LogLevel level, char const *fmt, ...);
+  static void debug(char const *fmt, ...);
+  static void info(char const *fmt, ...);
+  static void warn(char const *fmt, ...);
+  static void error(char const *fmt, ...);
   static void puts(char const *fmt, ...);
-  static void setPadLeft(int pad_left){
-    instance.pad_left=pad_left;
-  }
+  static void setPadLeft(int pad_left) { instance.pad_left = pad_left; }
   static void setLogLevel(LogLevel level) { instance.currentLogLevel = level; }
   static void remove();
 

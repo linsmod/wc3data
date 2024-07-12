@@ -82,7 +82,7 @@ int _getch() {
 // 因此，如果这些函数在其他地方被调用，应该直接使用ncurses提供的API。
 
 Logger::Logger() : logfile(nullptr) {
-  this->currentLogLevel = LogLevel::DEBUG;
+  this->currentLogLevel = LogLevel::ALL;
 #ifndef NOLOGGER
   ConsoleStart();
 #endif
@@ -361,48 +361,44 @@ void Logger::log(LogLevel level, char const *fmt, ...) {
     std::string text = varfmtstring(fmt, ap); // 确保这个函数可以正确处理va_list
     va_end(ap);
 
-    fprintf(stderr, "[%s] %s\n", getLogLevelString(level).c_str(),
-            text.c_str());
+    varfmtstring(fmt, ap);
+    Logger::item(text.c_str(), nullptr);
 
-    if (!instance.logfile) {
-      instance.logfile = new File(path::root() / "log.txt", "at");
-      instance.logfile->printf("============\n");
-    }
-    instance.logfile->printf("[%s] %s\n", getLogLevelString(level).c_str(),
-                             text.c_str());
+    
+    // fprintf(stderr, "[%s] %s\n", getLogLevelString(level).c_str(),
+    //         text.c_str());
+
+    // if (!instance.logfile) {
+    //   instance.logfile = new File(path::root() / "log.txt", "at");
+    //   instance.logfile->printf("============\n");
+    // }
+    // instance.logfile->printf("[%s] %s\n", getLogLevelString(level).c_str(),
+    //                          text.c_str());
   }
 }
 void Logger::debug(char const *fmt, ...) {
-  if (LogLevel::DEBUG <= instance.currentLogLevel) {
-    va_list ap;
-    va_start(ap, fmt);
-    log(LogLevel::DEBUG, fmt, ap);
-    va_end(ap);
-  }
+  va_list ap;
+  va_start(ap, fmt);
+  log(LogLevel::DEBUG, varfmtstring(fmt, ap).c_str());
+  va_end(ap);
 }
 void Logger::info(char const *fmt, ...) {
-  if (LogLevel::INFO <= instance.currentLogLevel) {
-    va_list ap;
-    va_start(ap, fmt);
-    log(LogLevel::DEBUG, fmt, ap);
-    va_end(ap);
-  }
+  va_list ap;
+  va_start(ap, fmt);
+  log(LogLevel::INFO, varfmtstring(fmt, ap).c_str());
+  va_end(ap);
 }
 void Logger::warn(char const *fmt, ...) {
-  if (LogLevel::WARN <= instance.currentLogLevel) {
-    va_list ap;
-    va_start(ap, fmt);
-    log(LogLevel::DEBUG, fmt, ap);
-    va_end(ap);
-  }
+  va_list ap;
+  va_start(ap, fmt);
+  log(LogLevel::WARN, varfmtstring(fmt, ap).c_str());
+  va_end(ap);
 }
 void Logger::error(char const *fmt, ...) {
-  if (LogLevel::ERROR <= instance.currentLogLevel) {
-    va_list ap;
-    va_start(ap, fmt);
-    log(LogLevel::DEBUG, fmt, ap);
-    va_end(ap);
-  }
+  va_list ap;
+  va_start(ap, fmt);
+  log(LogLevel::ERROR, varfmtstring(fmt, ap).c_str());
+  va_end(ap);
 }
 void Logger::puts(char const *fmt, ...) {
   va_list ap;
@@ -417,8 +413,8 @@ void Logger::puts(char const *fmt, ...) {
   }
   instance.logfile->printf("%s", text.c_str());
 }
-extern int remove (const char *__filename);
-void Logger::remove () {
+extern int remove(const char *__filename);
+void Logger::remove() {
   if (!instance.logfile) {
     ::remove((path::root() / "log.txt").c_str());
   }

@@ -58,6 +58,7 @@ string path::ext(string const &path) {
 #include <unistd.h>
 
 using namespace std;
+
 std::string get_parent_directory(const std::string &path) {
   size_t last_slash = path.rfind('/'); // 查找最后一个 '/'
   if (last_slash == std::string::npos) {
@@ -74,8 +75,30 @@ std::string get_parent_directory(const std::string &path) {
   // 截取最后一个 '/' 之前的所有内容
   return path.substr(0, last_slash);
 }
+std::string
+    path::_root; // 注意：这里没有使用static关键字，因为它已经在头文件中声明过了
+#include <filesystem>
+void path::root(std::string const &path) {
+  // 检查路径是否以斜线开头，如果不是，则视为相对路径并拼接appbase
+  if (path.find('/') != 0) {
+    _root = std::filesystem::absolute(appbase() / path).string();
+  } else {
+    _root = std::filesystem::absolute(path).string();
+  }
+
+  // 尝试切换目录（根据需要决定是否保留此逻辑）
+  if (chdir(_root.c_str()) != 0) {
+    perror("chdir");
+  }
+}
 string path::root() {
-  static string rp;
+  if (!_root.empty()) {
+    return _root;
+  }
+  return path::appbase();
+}
+string path::appbase() {
+  std::string rp;
   if (rp.empty()) {
     char buffer[PATH_MAX]; // 使用 PATH_MAX 以确保缓冲区足够大
 
@@ -89,13 +112,12 @@ string path::root() {
       buffer[bytesRead] = '\0'; // 添加 null 终止符
       rp = string(buffer);
       rp = get_parent_directory(rp);
-      rp = rp + "/work"; // 假设你想要的是可执行文件所在的目录下的 work 子目录
-      // std::string rpstr = "root path: " + rp;
-      // throw Exception(rp.c_str());
-      // 尝试改变当前工作目录到程序目录
-      if (chdir(rp.c_str()) != 0) {
-        perror("chdir");
-      }
+      // rp = rp + "/work"; // 假设你想要的是可执行文件所在的目录下的 work
+      // 子目录 std::string rpstr = "root path: " + rp; throw
+      // Exception(rp.c_str()); 尝试改变当前工作目录到程序目录 if
+      // (chdir(rp.c_str()) != 0) {
+      //   perror("chdir");
+      // }
     }
 
     // 注释掉或删除 Windows 特定的硬编码路径
