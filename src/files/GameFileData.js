@@ -40,7 +40,7 @@ class GameFileInner extends React.Component {
       const text = new encoding.TextDecoder().decode(data);
       this.jass = text.split(/\r\n?|\n/);
       state.panel = "jass";
-    } else if (ext === ".txt" || ext === ".slk") {
+    } else if (ext === ".txt" || ext === ".slk" || ext=='.fdf' || ext=='.toc') {
       const text = new encoding.TextDecoder().decode(data);
       const lines = text.split(/\r\n?|\n/);
       this.text = [];
