@@ -467,7 +467,7 @@ int main(int argc, char *argv[]) {
     if (std::regex_search(versionStr, match, digitRegex)) {
       std::string buildStr = match[0];
       try {
-        int build = std::stoi(buildStr); // 将找到的数字部分转换为整数
+        build = std::stoi(buildStr); // 将找到的数字部分转换为整数
         // std::cout << "Build Number: " << build << std::endl;
         // std::cout << "Version: " << versionStr << std::endl;
       } catch (const std::invalid_argument &ia) {

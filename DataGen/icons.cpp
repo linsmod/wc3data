@@ -26,9 +26,10 @@ void ImageStorage::add(uint64 hash, Image image) {
   }
 }
 #include "utils/logger.h"
+#include "utils/path.h"
 void ImageStorage::flush() {
   if (current_) {
-    current_.write(fmtstring("icons%u.png", id_++));
+    current_.write(path::root() / fmtstring("icons%u.png", id_++));
     current_ = Image();
     Logger::info("flush icons%u.png", id_);
     off = i;
