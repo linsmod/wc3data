@@ -1,3 +1,13 @@
+这个项目是生成用于浏览器可检索的游戏和地图数据的工程
+
+另外，生成的数据使用另一个Java写的http服务器项目wc3Host托管
+在我改编的另一个flowtshog_mdx-m3-viewer项目中，在上述元数据的加持下，可以加载dota地图。
+mdx-m3-viewer的地图渲染使用webgl，开发语言使用js或者ts
+以上主要是在2023年底到2024年上半年基于相关的开源项目改造所得。
+当初有计划实现整个游戏引擎，后面发现工作量过大，且自身关于游戏引擎的框架套路和游戏机制底层缺乏经验，于是搁置。
+其中自我感觉很棒的工作，当属可以将jass转为js运行起来。
+————linsmod（联系我:wx@LK616157,qq@625761566）
+
 Source code for [WC3 Data](https://wc3.rivsoft.net)
 
 DataGen project is used to generate static data and build WASM scripts for map parsing in browser.
