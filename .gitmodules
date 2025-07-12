@@ -1,3 +1,9 @@
 [submodule "wc3_datagen"]
 	path = wc3_datagen
 	url = https://github.com/linsmod/wc3_datagen
+[submodule "emsdk"]
+	path = emsdk
+	url = https://github.com/emscripten-core/emsdk.git
+[submodule "DataGen"]
+	path = DataGen
+	url = https://github.com/linsmod/wc3_datagen
