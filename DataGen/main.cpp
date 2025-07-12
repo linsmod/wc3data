@@ -62,7 +62,7 @@ MemoryFile write_images(std::set<istring> const &names, CompositeLoader &loader,
   HashArchive mdxarc;
   File listFile;
   if (all) {
-    listFile = File("rootlist.txt", "wb");
+    listFile = File("listfile.txt", "wb");
   }
   for (auto fn : Logger::loop(names)) {
     istring ext = path::ext(fn);

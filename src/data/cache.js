@@ -36,7 +36,7 @@ class BaseData {
   }
 
   listFile() {
-    return this.cache.fetch(`/api/rootlist.txt`, {global: true, type: "text"});
+    return this.cache.fetch(`/api/listfile.txt`, {global: true, type: "text"});
   }
 
   hasFile() {

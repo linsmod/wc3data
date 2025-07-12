@@ -47,7 +47,7 @@ function find_name($listfile, $value, $imExt) {
 if (preg_match('/^\/\w+\/(files|unit|item|destructible|doodad|ability|buff|upgrade)\/(\w+)$/', $uri, $matches)) {
   if ($matches[1] === 'files') {
     if (!$map_path) {
-      $name = find_name(file_get_contents($dataroot . 'rootlist.txt'), $matches[2], TRUE);
+      $name = find_name(file_get_contents($dataroot . 'listfile.txt'), $matches[2], TRUE);
     } else {
       $name = find_name(unpack_gzx($dataroot . $map_path, 'listfile.txt'), $matches[2], FALSE);
     }
