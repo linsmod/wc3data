@@ -1,0 +1,676 @@
+import { Color } from "frames/UIFrame";
+import { MeleeUI } from "./MeleeUI";
+import { Graphics } from "frames/Graphics";
+
+export const  MAX_PLAYERS:number= 16;
+	/*
+	 * With version, we use 0 for RoC, 1 for TFT emulation, and probably 2+ or
+	 * whatever for custom mods and other stuff
+	 */
+	export const  GAME_VERSION:number= 1;
+	export const  REPLACEABLE_TEXTURE_LIMIT:number= 64;
+	export const  SIMULATION_STEP_TIME:number = 1.0 / 20;
+	export const  PORT_NUMBER:number= 6115;
+	export const  BUILDING_CONSTRUCT_START_LIFE:number = 0.1;
+	export const  BUILD_QUEUE_SIZE:number= 7;
+	export const  MAX_SELECTION_SIZE:number= 12;
+	// It looks like in Patch 1.22, "Particle" in video settings will change this
+	// factor:
+	// Low - unknown ?
+	// Medium - 1.0f
+	// High - 1.5f
+	export const  MODEL_DETAIL_PARTICLE_FACTOR:number = 1.5;
+	export const  MODEL_DETAIL_PARTICLE_FACTOR_INVERSE:number = 1.0 / MODEL_DETAIL_PARTICLE_FACTOR;
+
+	// I know this default string is from somewhere, maybe a language file? Didn't
+	// find it yet so I used this
+	export const  DEFAULT_STRING:String = "Default string";
+
+	export const  CATCH_CURSOR:boolean = false;
+	export const  VERBOSE_LOGGING:boolean = false;
+	export const  ENABLE_DEBUG:boolean = false;
+	export const  SPECIAL_ESCAPE_KEYCODE = 0x7E;
+
+	// My tileset loader is "always on top", even for local files. This is different
+	// from some MPQ loader engines that would use
+	// load index as a numeric value and could be changed. For now, I have this
+	// workaround to fix it if you need the local files
+	// to take priority over built-ins for tilesets.
+	export const  FIX_FLAT_FILES_TILESET_LOADING:boolean = false;
+	export const  ENABLE_MUSIC:boolean = true;
+	export const  LOAD_UNITS_FROM_WORLDEDIT_DATA:boolean = false;
+	export const  CRASH_ON_INCOMPATIBLE_132_FEATURES:boolean = false;
+	export const  FIRE_DEATH_EVENTS_ON_REMOVEUNIT:boolean = false;
+	export const  INPUT_HOTKEY_MODE:number= 1;
+export class BuildOnBuildingIntersector{
+
+}
+export class Attachment{}
+export class CWidget{
+    isDead():boolean {
+        throw new Error("Method not implemented.");
+    }
+}
+export class CItem{}
+export class RenderWidget{
+    isSelectable(): boolean {
+        throw new Error("Method not implemented.");
+    }
+}
+export const AnyClickableUnitFilter = {
+    call(unit: CWidget): boolean {
+        let renderPeer: RenderWidget = MeleeUI._this_.war3MapViewer.getRenderPeer(unit);
+        return !unit.isDead() && renderPeer.isSelectable();
+    }
+}
+
+export const AnyTargetableUnitFilter = {
+    call(unit: CWidget): boolean {
+        return !unit.isDead();
+    }
+}
+
+export class CursorTargetSetupVisitor implements CAbilityVisitor<void> {
+    baseMouseX: number;
+    baseMouseY: number;
+
+    reset(baseMouseX: number, baseMouseY: number): CursorTargetSetupVisitor {
+        this.baseMouseX = baseMouseX;
+        this.baseMouseY = baseMouseY;
+        return this;
+    }
+
+    acceptAbilityAttack(ability: CAbilityAttack): void {
+        if (MeleeUI._this_.activeCommandOrderId == OrderIds.attackground) {
+            radius: number = 0;
+            for (let attack of MeleeUI._this_.activeCommandUnit.getSimulationUnit().getAttacks()) {
+                if (attack.getWeaponType().isAttackGroundSupported()) {
+                    if (attack instanceof CUnitAttackMissileSplash) {
+                        let areaOfEffectSmallDamage: number = (<CUnitAttackMissileSplash>attack)
+                            .getAreaOfEffectSmallDamage();
+                        radius = areaOfEffectSmallDamage;
+                    }
+                }
+            }
+            handlePlacementCursor(ability, radius);
+        } else {
+            handleTargetCursor(ability);
+        }
+        return null;
+    }
+
+    acceptAbilityMove(ability: CAbilityMove): void {
+        handleTargetCursor(ability);
+        return null;
+    }
+
+    acceptAbilityOrcBuild(ability: CAbilityOrcBuild): void {
+        handleBuildCursor(ability);
+        return null;
+    }
+
+    acceptAbilityHumanBuild(ability: CAbilityHumanBuild): void {
+        handleBuildCursor(ability);
+        return null;
+    }
+
+    acceptAbilityUndeadBuild(ability: CAbilityUndeadBuild): void {
+        handleBuildCursor(ability);
+        return null;
+    }
+
+    acceptAbilityNightElfBuild(ability: CAbilityNightElfBuild): void {
+        handleBuildCursor(ability);
+        return null;
+    }
+
+    acceptAbilityGenericDoNothing(ability: CAbilityGenericDoNothing): void {
+        handleTargetCursor(ability);
+        return null;
+    }
+
+    acceptAbilityColdArrows(ability: CAbilityColdArrows): void {
+        handleTargetCursor(ability);
+        return null;
+    }
+
+    acceptAbilityNagaBuild(ability: CAbilityNagaBuild): void {
+        handleBuildCursor(ability);
+        return null;
+    }
+
+    acceptAbilityNeutralBuild(ability: CAbilityNeutralBuild): void {
+        handleBuildCursor(ability);
+        return null;
+    }
+
+    acceptAbilityBuildInProgress(ability: CAbilityBuildInProgress): void {
+        handleTargetCursor(ability);
+        return null;
+    }
+
+    acceptAbilityQueue(ability: CAbilityQueue): void {
+        handleTargetCursor(ability);
+        return null;
+    }
+
+    acceptAbilityUpgrade(ability: CAbilityUpgrade): void {
+        handleTargetCursor(ability);
+        return null;
+    }
+
+    acceptAbilityReviveHero(ability: CAbilityReviveHero): void {
+        handleTargetCursor(ability);
+        return null;
+    }
+
+    acceptGenericSingleIconActiveAbility(ability: GenericSingleIconActiveAbility): void {
+        handleTargetCursor(ability);
+        return null;
+    }
+
+    acceptGenericNoIconAbility(ability: GenericNoIconAbility): void {
+        // this should probably never happen
+        handleTargetCursor(ability);
+        return null;
+    }
+
+    acceptAbilityReturnResources(ability: CAbilityReturnResources): void {
+        // this should probably never happen
+        handleTargetCursor(ability);
+        return null;
+    }
+
+    acceptAbilityRally(ability: CAbilityRally): void {
+        handleTargetCursor(ability);
+        return null;
+    }
+
+    acceptAbilityHero(ability: CAbilityHero): void {
+        handleTargetCursor(ability);
+        return null;
+    }
+
+    handleTargetCursor(ability: CAbility): void {
+        if (MeleeUI._this_.cursorModelInstance != null) {
+            MeleeUI._this_.cursorModelInstance.detach();
+            MeleeUI._this_.cursorModelInstance = null;
+            MeleeUI._this_.cursorFrame.setVisible(true);
+        }
+        MeleeUI._this_.cursorFrame.setSequence("Target");
+    }
+
+    handleBuildCursor(ability: AbstractCAbilityBuild): void {
+        let justLoaded: boolean = false;
+        let viewer: War3MapViewer = MeleeUI._this_.war3MapViewer;
+        if (MeleeUI._this_.cursorModelInstance == null) {
+            let unitData: MutableObjectData = viewer.getAllObjectData().getUnits();
+            let buildingTypeId: War3ID = new War3ID(MeleeUI._this_.activeCommandOrderId);
+            MeleeUI._this_.cursorBuildingUnitType = viewer.simulation.getUnitData().getUnitType(buildingTypeId);
+            let unitModelPath: string = viewer.getUnitModelPath(unitData.get(buildingTypeId));
+            let model: MdxModel = viewer.loadModelMdx(unitModelPath);
+            MeleeUI._this_.cursorModelInstance = <MdxComplexInstance>model.addInstance();
+            //				MeleeUI._this_.cursorModelInstance.setVertexColor(new float[] { 1, 1, 1, 0.5 });
+            let playerColorIndex: number = viewer.simulation
+                .getPlayer(MeleeUI._this_.activeCommandUnit.getSimulationUnit().getPlayerIndex()).getColor();
+            MeleeUI._this_.cursorModelInstance.setTeamColor(playerColorIndex);
+            MeleeUI._this_.cursorModelInstance.rotate(RenderUnit.tempQuat.setFromAxis(RenderMathUtils.VEC3_UNIT_Z,
+                viewer.simulation.getGameplayConstants().getBuildingAngle()));
+            MeleeUI._this_.cursorModelInstance.setAnimationSpeed(0);
+            justLoaded = true;
+            let buildingUnitType: CUnitType = MeleeUI._this_.cursorBuildingUnitType;
+            MeleeUI._this_.cursorModelPathing = buildingUnitType.getBuildingPathingPixelMap();
+
+            if (MeleeUI._this_.cursorModelPathing != null) {
+                MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap = new Pixmap(
+                    MeleeUI._this_.cursorModelPathing.getWidth(), MeleeUI._this_.cursorModelPathing.getHeight(),
+                    Format.RGBA8888);
+                MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.setBlending(Blending.None);
+                MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmapTextureData = new PixmapTextureData(
+                    MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap, Format.RGBA8888, false, false);
+                MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmapTexture = new Texture(
+                    MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmapTextureData);
+                let greenPixmap: ViewerTextureRenderable = new ViewerTextureRenderable.GdxViewerTextureRenderable(
+                    MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmapTexture);
+                MeleeUI._this_.cursorModelUnderneathPathingRedGreenSplatModel = new SplatModel(Gdx.gl30, greenPixmap,
+                    new ArrayList<>(), viewer.terrain.centerOffset, new ArrayList<>(), true, false, true);
+                MeleeUI._this_.cursorModelUnderneathPathingRedGreenSplatModel.color[3] = 0.20;
+            }
+        }
+        viewer.getClickLocation(clickLocationTemp, this.baseMouseX, Graphics.getHeight() - this.baseMouseY);
+        if (MeleeUI._this_.cursorModelPathing != null) {
+            clickLocationTemp.x = <float>Math.floor(clickLocationTemp.x / 64) * 64;
+            clickLocationTemp.y = <float>Math.floor(clickLocationTemp.y / 64) * 64;
+            if (((MeleeUI._this_.cursorModelPathing.getWidth() / 2) % 2) == 1) {
+                clickLocationTemp.x += 32;
+            }
+            if (((MeleeUI._this_.cursorModelPathing.getHeight() / 2) % 2) == 1) {
+                clickLocationTemp.y += 32;
+            }
+            clickLocationTemp.z = viewer.terrain.getGroundHeight(clickLocationTemp.x, clickLocationTemp.y);
+
+            let cursorWidthCells: number = MeleeUI._this_.cursorModelPathing.getWidth();
+            let halfCursorWidthCells: number = cursorWidthCells / 2;
+            let halfRenderWidth: number = cursorWidthCells * 16;
+            let cursorHeightCells: number = MeleeUI._this_.cursorModelPathing.getHeight();
+            let halfCursorHeightCells: number = cursorHeightCells / 2;
+            let halfRenderHeight: number = cursorHeightCells * 16;
+            let pathingGrid: PathingGrid = viewer.simulation.getPathingGrid();
+            let blockAll: boolean = false;
+            let cellX: number = pathingGrid.getCellX(clickLocationTemp.x);
+            let cellY: number = pathingGrid.getCellY(clickLocationTemp.y);
+            if ((cellX < halfCursorWidthCells) || (cellX > (pathingGrid.getWidth() - halfCursorWidthCells))
+                || (cellY < halfCursorHeightCells)
+                || (cellY > (pathingGrid.getHeight() - halfCursorHeightCells))) {
+                blockAll = true;
+            }
+            let canBeBuiltOnThem: boolean = MeleeUI._this_.cursorBuildingUnitType.isCanBeBuiltOnThem();
+            if (canBeBuiltOnThem) {
+                viewer.simulation.getWorldCollision().enumBuildingsAtPoint(clickLocationTemp.x, clickLocationTemp.y,
+                    MeleeUI._this_.buildOnBuildingIntersector.reset(clickLocationTemp.x, clickLocationTemp.y));
+                blockAll = (MeleeUI._this_.buildOnBuildingIntersector.getUnitToBuildOn() == null);
+            }
+            if (blockAll) {
+                for (let i = 0; i < MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
+                    for (let i = 0; j < MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
+                        MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.drawPixel(i,
+                            MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.getHeight() - 1 - j,
+                            Color.fromRgba(1, 0, 0, 1.0));
+                    }
+                }
+            } else if (!canBeBuiltOnThem) {
+                for (let i = 0; i < MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
+                    for (let i = 0; j < MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
+                        let blocked: boolean = false;
+                        let pathing: short = pathingGrid.getPathing(
+                            (clickLocationTemp.x + (i * 32)) - halfRenderWidth,
+                            (clickLocationTemp.y + (j * 32)) - halfRenderHeight);
+                        for (let preventedType of MeleeUI._this_.cursorBuildingUnitType
+                            .getPreventedPathingTypes()) {
+                            if (PathingFlags.isPathingFlag(pathing, preventedType)) {
+                                blocked = true;
+                            }
+                        }
+                        for (let requiredType of MeleeUI._this_.cursorBuildingUnitType
+                            .getRequiredPathingTypes()) {
+                            if (!PathingFlags.isPathingFlag(pathing, requiredType)) {
+                                blocked = true;
+                            }
+                        }
+                        let color: number = blocked ? Color.fromRgba(1, 0, 0, 1.0) : Color.fromRgba(0, 1, 0, 1.0);
+                        MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.drawPixel(i,
+                            MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.getHeight() - 1 - j, color);
+                    }
+                }
+            } else {
+                for (let i = 0; i < MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.getWidth(); i++) {
+                    for (let i = 0; j < MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.getHeight(); j++) {
+                        MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.drawPixel(i,
+                            MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmap.getHeight() - 1 - j,
+                            Color.fromRgba(0, 1, 0, 1.0));
+                    }
+                }
+            }
+            MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmapTexture
+                .load(MeleeUI._this_.cursorModelUnderneathPathingRedGreenPixmapTextureData);
+
+            if (justLoaded) {
+                viewer.terrain.addSplatBatchModel(BUILDING_PATHING_PREVIEW_KEY,
+                    MeleeUI._this_.cursorModelUnderneathPathingRedGreenSplatModel);
+                MeleeUI._this_.placementCursor = MeleeUI._this_.cursorModelUnderneathPathingRedGreenSplatModel.add(
+                    clickLocationTemp.x - halfRenderWidth, clickLocationTemp.y - halfRenderHeight,
+                    clickLocationTemp.x + halfRenderWidth, clickLocationTemp.y + halfRenderHeight, 10,
+                    viewer.terrain.centerOffset);
+            }
+            MeleeUI._this_.placementCursor.setLocation(clickLocationTemp.x, clickLocationTemp.y,
+                viewer.terrain.centerOffset);
+        }
+        MeleeUI._this_.cursorModelInstance.setLocation(clickLocationTemp);
+        SequenceUtils.randomSequence(MeleeUI._this_.cursorModelInstance, PrimaryTag.STAND);
+        MeleeUI._this_.cursorFrame.setVisible(false);
+        if (justLoaded) {
+            MeleeUI._this_.cursorModelInstance.setScene(viewer.worldScene);
+        }
+    }
+
+    handlePlacementCursor(ability: CAbility, radius: number): void {
+        let viewer: War3MapViewer = MeleeUI._this_.war3MapViewer;
+        viewer.getClickLocation(clickLocationTemp, this.baseMouseX, Graphics.getHeight() - this.baseMouseY);
+        if (MeleeUI._this_.placementCursor == null) {
+            MeleeUI._this_.placementCursor = viewer.terrain.addUberSplat(
+                MeleeUI._this_.rootFrame.getSkinField("PlacementCursor"), clickLocationTemp.x,
+                clickLocationTemp.y, 10, radius, true, true, true);
+        }
+        MeleeUI._this_.placementCursor.setLocation(clickLocationTemp.x, clickLocationTemp.y,
+            viewer.terrain.centerOffset);
+        MeleeUI._this_.cursorFrame.setVisible(false);
+    }
+}
+
+export class RallyPositioningVisitor implements AbilityTargetVisitor<void> {
+    rallyPointInstance: MdxComplexInstance = null;
+
+    reset(rallyPointInstance: MdxComplexInstance): RallyPositioningVisitor {
+        this.rallyPointInstance = rallyPointInstance;
+        return this;
+    }
+
+    acceptAbilityPointTarget(target: AbilityPointTarget): void {
+        this.rallyPointInstance.setParent(null);
+        let rallyPointX: number = target.getX();
+        let rallyPointY: number = target.getY();
+        this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
+            MeleeUI._this_.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
+        return null;
+    }
+
+    acceptUnit(target: CUnit): void {
+        let renderUnit: RenderUnit = MeleeUI._this_.war3MapViewer.getRenderPeer(target);
+        let model: MdxModel = <MdxModel>renderUnit.instance.model;
+        let index: number = -1;
+        for (let i = 0; i < model.attachments.size(); i++) {
+            let attachment: Attachment = model.attachments.get(i);
+            if (attachment.getName().toLowerCase(Locale.US).startsWith("sprite rally")) {
+                index = i;
+                break;
+            }
+        }
+        if (index == -1) {
+            for (let i = 0; i < model.attachments.size(); i++) {
+                let attachment: Attachment = model.attachments.get(i);
+                if (attachment.getName().toLowerCase(Locale.US).startsWith("sprite")) {
+                    index = i;
+                    break;
+                }
+            }
+        }
+        if (index == -1) {
+            for (let i = 0; i < model.attachments.size(); i++) {
+                let attachment: Attachment = model.attachments.get(i);
+                if (attachment.getName().toLowerCase(Locale.US).startsWith("overhead ref")) {
+                    index = i;
+                }
+            }
+        }
+        if (index != -1) {
+            let attachment: MdxNode = renderUnit.instance.getAttachment(index);
+            this.rallyPointInstance.setParent(attachment);
+            this.rallyPointInstance.setLocation(0, 0, 0);
+        } else {
+            this.rallyPointInstance.setParent(null);
+            let rallyPointX: number = target.getX();
+            let rallyPointY: number = target.getY();
+            this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
+                MeleeUI._this_.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
+        }
+        return null;
+    }
+
+    acceptDestructable(target: CDestructable): void {
+        this.rallyPointInstance.setParent(null);
+        let rallyPointX: number = target.getX();
+        let rallyPointY: number = target.getY();
+        this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
+            MeleeUI._this_.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY) + 192);
+        return null;
+    }
+
+    acceptItem(target: CItem): void {
+        this.rallyPointInstance.setParent(null);
+        let rallyPointX: number = target.getX();
+        let rallyPointY: number = target.getY();
+        this.rallyPointInstance.setLocation(rallyPointX, rallyPointY,
+            MeleeUI._this_.war3MapViewer.terrain.getGroundHeight(rallyPointX, rallyPointY));
+        return null;
+    }
+}
+
+export const ActiveCommandUnitTargetFilter = {
+    call(unit: CWidget): boolean {
+        targetReceiver: BooleanAbilityTargetCheckReceiver<CWidget> = BooleanAbilityTargetCheckReceiver
+        .< CWidget > getInstance();
+    MeleeUI._this_.activeCommand.checkCanTarget(MeleeUI._this_.war3MapViewer.simulation,
+        MeleeUI._this_.activeCommandUnit.getSimulationUnit(), MeleeUI._this_.activeCommandOrderId, unit,
+        targetReceiver);
+    return targetReceiver.isTargetable();
+}
+}
+
+static export class Portrait {
+    update() {
+        throw new Error("Method not implemented.");
+    }
+    talk() {
+        throw new Error("Method not implemented.");
+    }
+    setSelectedUnit(unit: RenderUnit) {
+        throw new Error("Method not implemented.");
+    }
+    MdxComplexInstance modelInstance;
+    portraitCameraManager: PortraitCameraManager;
+    portraitScene: Scene;
+    EnumSet<AnimationTokens.SecondaryTag>recycleSet = EnumSet
+        .noneOf(AnimationTokens.SecondaryTag.class);
+    RenderUnit unit;
+
+    constructor(war3MapViewer: War3MapViewer, portraitScene: Scene) {
+        this.portraitScene = portraitScene;
+        this.portraitCameraManager = new PortraitCameraManager();
+        this.portraitCameraManager.setupCamera(this.portraitScene);
+        this.portraitScene.camera.viewport(new Rectangle(100, 0, 6400, 48));
+    }
+
+    update(): void {
+        this.portraitCameraManager.updateCamera();
+        if ((this.modelInstance != null)
+            && (this.modelInstance.sequenceEnded || (this.modelInstance.sequence == -1))) {
+            this.recycleSet.clear();
+            this.recycleSet.addAll(this.unit.getSecondaryAnimationTags());
+            SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
+        }
+    }
+
+    talk(): void {
+        // TODO we somehow called talk from null by clicking a unit right at the same
+        // time died:it, so I do a null check here until I study that case further.
+        if (this.modelInstance != null) {
+            this.recycleSet.clear();
+            this.recycleSet.addAll(this.unit.getSecondaryAnimationTags());
+            this.recycleSet.add(SecondaryTag.TALK);
+            SequenceUtils.randomSequence(this.modelInstance, PrimaryTag.PORTRAIT, this.recycleSet, true);
+        }
+    }
+
+    setSelectedUnit(unit: RenderUnit): void {
+        if (this.unit != unit) {
+            this.unit = unit;
+            if (unit == null) {
+                if (this.modelInstance != null) {
+                    this.portraitScene.removeInstance(this.modelInstance);
+                }
+                this.modelInstance = null;
+                this.portraitCameraManager.setModelInstance(null, null);
+            } else {
+                let portraitModel: MdxModel = unit.portraitModel;
+                if (portraitModel != null) {
+                    if (this.modelInstance != null) {
+                        this.portraitScene.removeInstance(this.modelInstance);
+                    }
+                    this.modelInstance = <MdxComplexInstance>portraitModel.addInstance();
+                    this.portraitCameraManager.setModelInstance(this.modelInstance, portraitModel);
+                    this.modelInstance.setBlendTime(portraitModel.blendTime);
+                    this.modelInstance.setSequenceLoopMode(SequenceLoopMode.NEVER_LOOP);
+                    this.modelInstance.setScene(this.portraitScene);
+                    this.modelInstance.setVertexColor(unit.instance.vertexColor);
+                    this.modelInstance.setTeamColor(unit.playerIndex);
+                }
+            }
+        }
+    }
+}
+
+export class InfoPanelIconBackdrops {
+    damageBackdropTextures: Texture[];
+
+    InfoPanelIconBackdrops(CodeKeyType[] attackTypes, gameUI: GameUI, prefix: string,
+        let suffix: string) {
+        this.damageBackdropTextures = new Texture[attackTypes.length];
+        for (let i = 0; index < attackTypes.length; index++) {
+            let attackType: CodeKeyType = attackTypes[index];
+            let skinLookupKey: string = "InfoPanelIcon" + prefix + attackType.getCodeKey() + suffix;
+            let suffixTexture: Texture = gameUI.loadTexture(gameUI.getSkinField(skinLookupKey));
+            if (suffixTexture != null) {
+                this.damageBackdropTextures[index] = suffixTexture;
+            } else {
+                skinLookupKey = "InfoPanelIcon" + prefix + attackType.getCodeKey();
+                this.damageBackdropTextures[index] = gameUI.loadTexture(gameUI.getSkinField(skinLookupKey));
+            }
+        }
+    }
+
+    Texture getTexture(attackType: CodeKeyType) {
+        if (attackType != null) {
+            let ordinal: number = attackType.ordinal();
+            if ((ordinal >= 0) && (ordinal < this.damageBackdropTextures.length)) {
+                return this.damageBackdropTextures[ordinal];
+            }
+        }
+        return this.damageBackdropTextures[0];
+    }
+}
+
+class ItemCommandCardCommandListener implements CommandCardCommandListener {
+    void onClick(abilityHandleId: number, orderId: number, rightClick: boolean) {
+    let selectedUnit2: RenderUnit = MeleeUI._this_.selectedUnit;
+    let simulationUnit: CUnit = selectedUnit2.getSimulationUnit();
+    if (rightClick) {
+        let inventoryData: CAbilityInventory = simulationUnit.getInventoryData();
+        let slot: number = orderId - 1;
+        let itemInSlot: CItem = inventoryData.getItemInSlot(slot);
+        if (MeleeUI._this_.draggingItem != null) {
+            let activeCmdSimUnit: CUnit = MeleeUI._this_.activeCommandUnit.getSimulationUnit();
+            MeleeUI._this_.unitOrderListener.issueTargetOrder(activeCmdSimUnit.getHandleId(),
+                activeCmdSimUnit.getInventoryData().getHandleId(), OrderIds.itemdrag00 + slot,
+                MeleeUI._this_.draggingItem.getHandleId(), false);
+            setDraggingItem(null);
+            MeleeUI._this_.activeCommand = null;
+            MeleeUI._this_.activeCommandUnit = null;
+        } else {
+            if (itemInSlot != null) {
+                setDraggingItem(itemInSlot);
+                MeleeUI._this_.activeCommand = inventoryData;
+                MeleeUI._this_.activeCommandUnit = selectedUnit2;
+                MeleeUI._this_.activeCommandOrderId = OrderIds.dropitem;
+            }
+        }
+    } else {
+        let game: CSimulation = MeleeUI._this_.war3MapViewer.simulation;
+        let receiver: BooleanAbilityActivationReceiver = BooleanAbilityActivationReceiver.INSTANCE;
+        let inventoryData: CAbilityInventory = simulationUnit.getInventoryData();
+        inventoryData.checkCanUse(game, simulationUnit, orderId, receiver);
+        if (receiver.isOk()) {
+                targetReceiver: BooleanAbilityTargetCheckReceiver<Void> = BooleanAbilityTargetCheckReceiver
+                .getInstance();
+            targetReceiver.reset();
+            inventoryData.checkCanTargetNoTarget(game, simulationUnit, orderId, targetReceiver);
+            if (targetReceiver.isTargetable()) {
+                MeleeUI._this_.unitOrderListener.issueImmediateOrder(simulationUnit.getHandleId(),
+                    inventoryData.getHandleId(), orderId, isShiftDown());
+            }
+        }
+    }
+}
+
+void openMenu(orderId: number) {
+    MeleeUI._this_.openMenu(orderId);
+}
+
+}
+
+export class MultiSelectUnitStateListener implements CUnitStateListener {
+    sourceUnit: RenderUnit;
+    index: number;
+    disposed: boolean = false;
+
+    constructor(sourceUnit: RenderUnit, index: number) {
+        this.sourceUnit = sourceUnit;
+        this.index = index;
+    }
+
+    dispose(): void {
+        this.sourceUnit.getSimulationUnit().removeStateListener(this);
+        this.disposed = true;
+    }
+
+    lifeChanged(): void {
+        if (this.disposed) {
+            return;
+        }
+        if (this.sourceUnit.getSimulationUnit().isDead()) {
+            MeleeUI._this_.selectedUnits.remove(this.sourceUnit);
+            MeleeUI._this_.war3MapViewer.doUnselectUnit(this.sourceUnit);
+            MeleeUI._this_.multiSelectUnitStateListeners.remove(this.index);
+            for (let i = this.index; i < MeleeUI._this_.multiSelectUnitStateListeners.size(); i++) {
+                MeleeUI._this_.multiSelectUnitStateListeners.get(i).index--;
+            }
+            dispose();
+            reloadSelectedUnitUI(MeleeUI._this_.selectedUnit);
+        } else {
+            MeleeUI._this_.selectedUnitFrames[this.index]
+                .setLifeRatioRemaining(this.sourceUnit.getSimulationUnit().getLife()
+                    / this.sourceUnit.getSimulationUnit().getMaximumLife());
+        }
+    }
+
+    manaChanged(): void {
+        if (this.disposed) {
+            return;
+        }
+        MeleeUI._this_.selectedUnitFrames[this.index]
+            .setManaRatioRemaining(this.sourceUnit.getSimulationUnit().getMana()
+                / this.sourceUnit.getSimulationUnit().getMaximumMana());
+    }
+
+    ordersChanged(): void {
+        if (this.disposed) {
+            return;
+        }
+
+    }
+
+    queueChanged(): void {
+        if (this.disposed) {
+            return;
+        }
+
+    }
+
+    rallyPointChanged(): void {
+        if (this.disposed) {
+            return;
+        }
+
+    }
+
+    waypointsChanged(): void {
+        if (this.disposed) {
+            return;
+        }
+
+    }
+
+    heroStatsChanged(): void {
+        if (this.disposed) {
+            return;
+        }
+
+    }
+
+    inventoryChanged(): void {
+        if (this.disposed) {
+            return;
+        }
+
+    }
+
+}
