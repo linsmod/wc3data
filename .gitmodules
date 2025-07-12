@@ -1,0 +1,3 @@
+[submodule "wc3_datagen"]
+	path = wc3_datagen
+	url = https://github.com/linsmod/wc3_datagen
